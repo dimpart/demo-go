@@ -1,4 +1,9 @@
 /* license: https://mit-license.org
+ *
+ *  DIM-SDK : Decentralized Instant Messaging Software Development Kit
+ *
+ *                                Written in 2021 by Moky <albert.moky@gmail.com>
+ *
  * ==============================================================================
  * The MIT License (MIT)
  *
@@ -25,32 +30,69 @@
  */
 package protocol
 
-import . "github.com/dimchat/core-go/protocol"
-
-const (
-	REPORT  = "report"
-	ONLINE  = "online"
-	OFFLINE = "offline"
+import (
+	. "github.com/dimchat/core-go/protocol"
+	. "github.com/dimchat/mkm-go/protocol"
+	. "github.com/dimchat/mkm-go/types"
 )
 
+const LOGIN = "login"
+
 /**
- *  Report Command
+ *  Login Command
  *
  *  <blockquote><pre>
  *  data format: {
  *      type : 0x88,
  *      sn   : 123,
  *
- *      command : "report",
- *      title   : "online",      // or "offline"
- *      //---- extra info
- *      time    : 1234567890,    // timestamp
+ *      command  : "login",
+ *      time     : 0,
+ *      //---- client info ----
+ *      did      : "{UserID}",
+ *      device   : "DeviceID",  // (optional)
+ *      agent    : "UserAgent", // (optional)
+ *      //---- server info ----
+ *      station  : {
+ *          did  : "{StationID}",
+ *          host : "{IP}",
+ *          port : 9394
+ *      },
+ *      provider : {
+ *          did  : "{SP_ID}"
+ *      }
  *  }
  *  </pre></blockquote>
  */
-type ReportCommand interface {
+type LoginCommand interface {
 	Command
 
-	Title() string
-	SetTitle(title string)
+	/**
+	 *  User ID
+	 */
+	ID() ID
+
+	/**
+	 *  Device ID
+	 */
+	Device() string
+	SetDevice(device string)
+
+	/**
+	 *  User Agent
+	 */
+	Agent() string
+	SetAgent(agent string)
+
+	/**
+	 *  DIM Network Station
+	 */
+	StationInfo() StringKeyMap
+	SetStationInfo(station StringKeyMap)
+
+	/**
+	 *  DIM Network Service Provider
+	 */
+	ProviderInfo() StringKeyMap
+	SetProviderInfo(sp StringKeyMap)
 }

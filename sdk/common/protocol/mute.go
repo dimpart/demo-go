@@ -1,4 +1,9 @@
 /* license: https://mit-license.org
+ *
+ *  DIM-SDK : Decentralized Instant Messaging Software Development Kit
+ *
+ *                                Written in 2021 by Moky <albert.moky@gmail.com>
+ *
  * ==============================================================================
  * The MIT License (MIT)
  *
@@ -25,32 +30,30 @@
  */
 package protocol
 
-import . "github.com/dimchat/core-go/protocol"
-
-const (
-	REPORT  = "report"
-	ONLINE  = "online"
-	OFFLINE = "offline"
+import (
+	. "github.com/dimchat/core-go/protocol"
+	. "github.com/dimchat/mkm-go/protocol"
 )
 
+const MUTE = "mute"
+
 /**
- *  Report Command
+ *  Mute Command
  *
  *  <blockquote><pre>
  *  data format: {
  *      type : 0x88,
  *      sn   : 123,
  *
- *      command : "report",
- *      title   : "online",      // or "offline"
- *      //---- extra info
- *      time    : 1234567890,    // timestamp
+ *      command : "mute",
+ *      list    : []      // mute-list
  *  }
  *  </pre></blockquote>
  */
-type ReportCommand interface {
+type MuteCommand interface {
 	Command
 
-	Title() string
-	SetTitle(title string)
+	// mute-list
+	MuteList() []ID
+	SetMuteList(list []ID)
 }

@@ -1,4 +1,9 @@
 /* license: https://mit-license.org
+ *
+ *  DIM-SDK : Decentralized Instant Messaging Software Development Kit
+ *
+ *                                Written in 2021 by Moky <albert.moky@gmail.com>
+ *
  * ==============================================================================
  * The MIT License (MIT)
  *
@@ -23,34 +28,57 @@
  * SOFTWARE.
  * ==============================================================================
  */
-package protocol
+package dkd
 
-import . "github.com/dimchat/core-go/protocol"
-
-const (
-	REPORT  = "report"
-	ONLINE  = "online"
-	OFFLINE = "offline"
+import (
+	. "github.com/dimchat/core-go/dkd"
+	. "github.com/dimchat/mkm-go/protocol"
+	. "github.com/dimchat/mkm-go/types"
+	. "github.com/dimpart/demo-go/sdk/common/protocol"
 )
 
-/**
- *  Report Command
- *
- *  <blockquote><pre>
- *  data format: {
- *      type : 0x88,
- *      sn   : 123,
- *
- *      command : "report",
- *      title   : "online",      // or "offline"
- *      //---- extra info
- *      time    : 1234567890,    // timestamp
- *  }
- *  </pre></blockquote>
- */
-type ReportCommand interface {
-	Command
+type BaseMuteCommand struct {
+	//MuteCommand
+	BaseCommand
 
-	Title() string
-	SetTitle(title string)
+	// mute-list
+	_list []ID
+}
+
+func (content *BaseMuteCommand) InitWithMap(dict StringKeyMap) MuteCommand {
+	if content.BaseCommand.InitWithMap(dict) != nil {
+		// lazy load
+		content._list = nil
+	}
+	return content
+}
+
+func (content *BaseMuteCommand) InitWithList(list []ID) MuteCommand {
+	if content.BaseCommand.Init(MUTE) != nil {
+		if !ValueIsNil(list) {
+			content.SetMuteList(list)
+		}
+	}
+	return content
+}
+
+// Override
+func (content *BaseMuteCommand) MuteList() []ID {
+	if content._list == nil {
+		list := content.Get("list")
+		if list != nil {
+			content._list = IDConvert(list)
+		}
+	}
+	return content._list
+}
+
+// Override
+func (content *BaseMuteCommand) SetMuteList(list []ID) {
+	if ValueIsNil(list) {
+		content.Remove("list")
+	} else {
+		content.Set("list", IDRevert(list))
+	}
+	content._list = list
 }

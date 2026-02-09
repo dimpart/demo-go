@@ -1,4 +1,9 @@
 /* license: https://mit-license.org
+ *
+ *  DIM-SDK : Decentralized Instant Messaging Software Development Kit
+ *
+ *                                Written in 2021 by Moky <albert.moky@gmail.com>
+ *
  * ==============================================================================
  * The MIT License (MIT)
  *
@@ -25,32 +30,61 @@
  */
 package protocol
 
-import . "github.com/dimchat/core-go/protocol"
+import (
+	"fmt"
 
-const (
-	REPORT  = "report"
-	ONLINE  = "online"
-	OFFLINE = "offline"
+	. "github.com/dimchat/core-go/protocol"
 )
 
+type HandshakeState uint8
+
+const (
+	HandshakeInit    HandshakeState = iota
+	HandshakeStart                  // C -> S, without session key(or session expired)
+	HandshakeAgain                  // S -> C, with new session key
+	HandshakeRestart                // C -> S, with new session key
+	HandshakeSuccess                // S -> C, handshake accepted
+)
+
+func (state HandshakeState) String() string {
+	switch state {
+	case HandshakeInit:
+		return "HandshakeInit"
+	case HandshakeStart:
+		return "HandshakeStart"
+	case HandshakeAgain:
+		return "HandshakeAgain"
+	case HandshakeRestart:
+		return "HandshakeRestart"
+	case HandshakeSuccess:
+		return "HandshakeSuccess"
+	default:
+		return fmt.Sprintf("HandshakeState(%d)", state)
+	}
+}
+
+const HANDSHAKE = "handshake"
+
 /**
- *  Report Command
+ *  Handshake command message
  *
  *  <blockquote><pre>
  *  data format: {
  *      type : 0x88,
  *      sn   : 123,
  *
- *      command : "report",
- *      title   : "online",      // or "offline"
- *      //---- extra info
- *      time    : 1234567890,    // timestamp
+ *      command : "handshake",    // command name
+ *      title   : "Hello world!", // "DIM?", "DIM!"
+ *      session : "{SESSION_KEY}" // session key
  *  }
  *  </pre></blockquote>
  */
-type ReportCommand interface {
+type HandshakeCommand interface {
 	Command
 
 	Title() string
-	SetTitle(title string)
+
+	SessionKey() string
+
+	State() HandshakeState
 }

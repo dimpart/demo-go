@@ -1,12 +1,10 @@
-module github.com/dimchat/demo-go
+module github.com/dimpart/demo-go
 
 go 1.13
 
 require (
-	github.com/dimchat/core-go v0.0.0-20220415053758-89943482374c
-	github.com/dimchat/dkd-go v0.0.0-20220415045628-8829973446fd
-	github.com/dimchat/mkm-go v0.0.0-20220415044222-232547343828
-	github.com/dimchat/sdk-go/dimp v0.0.0-20220415060040-812814347c64
-	github.com/dimchat/sdk-go/plugins v0.0.0-20220415060040-812814347c64
-	golang.org/x/sys v0.0.0-20200824131525-c12d262b63d8 // indirect
+	github.com/dimchat/core-go v0.4.1-0.20260207173006-2219482479b9
+	github.com/dimchat/dkd-go v0.4.1-0.20260131194623-66282771cb1b
+	github.com/dimchat/mkm-go v0.3.1-0.20260131165850-455224233aeb
+	github.com/dimchat/sdk-go v0.4.1-0.20260209203924-2684914cab2f
 )

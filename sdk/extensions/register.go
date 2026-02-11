@@ -26,112 +26,107 @@
 package dimp
 
 import (
+	"math/rand"
+
+	. "github.com/dimchat/core-go/mkm"
+	. "github.com/dimchat/core-go/protocol"
 	. "github.com/dimchat/mkm-go/crypto"
 	. "github.com/dimchat/mkm-go/protocol"
-	"math/rand"
 )
 
 type UserInfo struct {
-
 	ID ID
 
 	Meta Meta
 	Visa Document
 
-	IdentityKey SignKey
+	IdentityKey      SignKey
 	CommunicationKey DecryptKey
 }
 
 type GroupInfo struct {
-
 	ID ID
 
-	Meta Meta
+	Meta     Meta
 	Bulletin Document
 }
 
 /**
  *  Generate user account info
  *
- * @param name - nickname
- * @param avatar - photo URL
+ * @param nickname - nickname
+ * @param avatar   - photo URL
  * @return user info
  */
-func GenerateUserInfo(name string, avatar string) *UserInfo {
+func GenerateUserInfo(nickname string, avatar TransportableFile) *UserInfo {
 	//
 	//  Step 1. generate private key (with asymmetric algorithm)
 	//
-	identityKey := PrivateKeyGenerate(ECC)
+	idKey := GeneratePrivateKey(ECC)
 	//
 	//  Step 2. generate meta with private key
 	//
-	meta := MetaGenerate(ETH, identityKey, "")
+	meta := GenerateMeta(ETH, idKey, "")
 	//
 	//  Step 3. generate ID with meta
 	//
-	identifier := IDGenerate(meta, MAIN, "")
+	identifier := GenerateID(meta, USER, "")
 	//
 	//  Step 4. generate visa document and sign with private key
 	//
-	communicationKey := PrivateKeyGenerate(RSA)
-	visaKey := communicationKey.PublicKey().(EncryptKey)
-	visa := DocumentCreate(VISA, identifier, "", "").(Visa)
-	visa.SetName(name)
-	visa.SetAvatar(avatar)
-	visa.SetKey(visaKey)
-	visa.Sign(identityKey)
+	msgKey := GeneratePrivateKey(RSA)
+	visaKey := msgKey.PublicKey().(EncryptKey)
+	visa := createVisa(identifier, visaKey, idKey, nickname, avatar)
 	//
 	//  OK
 	//
 	return &UserInfo{
-		ID: identifier,
-		Meta: meta,
-		Visa: visa,
-		IdentityKey: identityKey,
-		CommunicationKey: communicationKey.(DecryptKey),
+		ID:               identifier,
+		Meta:             meta,
+		Visa:             visa,
+		IdentityKey:      idKey,
+		CommunicationKey: msgKey.(DecryptKey),
 	}
 }
 
 /**
- *  Generate robot account info
+ *  Generate bot user account info
  *
- * @param seed - meta seed for ID.name
- * @param name - robot name
+ * @param seed   - meta seed for ID.name
+ * @param name   - bot name
  * @param avatar - photo URL
- * @return robot info
+ * @return bot info
  */
-func GenerateRobotInfo(seed string, name string, avatar string) *UserInfo {
+func GenerateBotInfo(seed string, name string, avatar TransportableFile) *UserInfo {
 	if seed == "" {
-		seed = "robot"
+		seed = "bot"
 	}
 	//
 	//  Step 1. generate private key (with asymmetric algorithm)
 	//
-	identityKey := PrivateKeyGenerate(RSA)
+	privateKey := GeneratePrivateKey(RSA)
 	//
 	//  Step 2. generate meta with private key
 	//
-	meta := MetaGenerate(MKM, identityKey, seed)
+	meta := GenerateMeta(MKM, privateKey, seed)
 	//
 	//  Step 3. generate ID with meta
 	//
-	identifier := IDGenerate(meta, ROBOT, "")
+	identifier := GenerateID(meta, BOT, "")
 	//
 	//  Step 4. generate visa document and sign with private key
 	//
-	visa := DocumentCreate(VISA, identifier, "", "").(Visa)
-	visa.SetName(name)
-	visa.SetAvatar(avatar)
-	visa.Sign(identityKey)
+	visaKey := privateKey.PublicKey().(EncryptKey)
+	visa := createVisa(identifier, visaKey, privateKey, name, avatar)
 	//
 	//  OK
 	//
 	return &UserInfo{
-		ID: identifier,
-		Meta: meta,
-		Visa: visa,
-		IdentityKey: identityKey,
-		CommunicationKey: identityKey.(DecryptKey),
+		ID:               identifier,
+		Meta:             meta,
+		Visa:             visa,
+		IdentityKey:      privateKey,
+		CommunicationKey: privateKey.(DecryptKey),
 	}
 }
 
@@ -145,40 +140,39 @@ func GenerateRobotInfo(seed string, name string, avatar string) *UserInfo {
  * @param port - station port
  * @return station info
  */
-func GenerateStationInfo(seed string, name string, logo string, host string, port uint16) *UserInfo {
+func GenerateStationInfo(seed string, name string, logo TransportableFile, host string, port uint16) *UserInfo {
 	if seed == "" {
 		seed = "station"
 	}
 	//
 	//  Step 1. generate private key (with asymmetric algorithm)
 	//
-	identityKey := PrivateKeyGenerate(RSA)
+	privateKey := GeneratePrivateKey(RSA)
 	//
 	//  Step 2. generate meta with private key
 	//
-	meta := MetaGenerate(MKM, identityKey, seed)
+	meta := GenerateMeta(MKM, privateKey, seed)
 	//
 	//  Step 3. generate ID with meta
 	//
-	identifier := IDGenerate(meta, STATION, "")
+	identifier := GenerateID(meta, STATION, "")
 	//
 	//  Step 4. generate visa document and sign with private key
 	//
-	profile := DocumentCreate(PROFILE, identifier, "", "")
-	profile.SetName(name)
-	profile.Set("logo", logo)
-	profile.Set("host", host)
-	profile.Set("port", port)
-	profile.Sign(identityKey)
+	visaKey := privateKey.PublicKey().(EncryptKey)
+	profile := createVisa(identifier, visaKey, nil, name, logo)
+	profile.SetProperty("host", host)
+	profile.SetProperty("port", port)
+	profile.Sign(privateKey)
 	//
 	//  OK
 	//
 	return &UserInfo{
-		ID: identifier,
-		Meta: meta,
-		Visa: profile,
-		IdentityKey: identityKey,
-		CommunicationKey: identityKey.(DecryptKey),
+		ID:               identifier,
+		Meta:             meta,
+		Visa:             profile,
+		IdentityKey:      privateKey,
+		CommunicationKey: privateKey.(DecryptKey),
 	}
 }
 
@@ -186,37 +180,89 @@ func GenerateStationInfo(seed string, name string, logo string, host string, por
  *  Generate group account info
  *
  * @param founder - group founder
- * @param name - group name
+ * @param title   - group name
  * @return Group object
  */
-func GenerateGroupInfo(founder *UserInfo, name string, seed string) *GroupInfo {
+func GenerateGroupInfo(founder *UserInfo, title string, seed string) *GroupInfo {
 	//
-	//  Step 1. prepare seed for group ID
+	//  Step 0. prepare seed for group ID
 	//
 	if seed == "" {
-		r := rand.Int31n(999990000) + 10000  // 10,000 ~ 999,999,999
+		r := rand.Int31n(999990000) + 10000 // 10,000 ~ 999,999,999
 		seed = "Group-" + string(r)
 	}
 	//
+	//  Step 1. get private key
+	//
+	privateKey := founder.IdentityKey
+	//
 	//  Step 2. generate meta with founder's private key
 	//
-	meta := MetaGenerate(MKM, founder.IdentityKey, seed)
+	meta := GenerateMeta(MKM, privateKey, seed)
 	//
 	//  Step 3. generate ID with meta
 	//
-	identifier := IDGenerate(meta, POLYLOGUE, "")
+	identifier := GenerateID(meta, GROUP, "")
 	//
 	//  Step 4. generate bulletin document and sign with founder's private key
 	//
-	bulletin := DocumentCreate(BULLETIN, identifier, "", "")
-	bulletin.SetName(name)
-	bulletin.Sign(founder.IdentityKey)
+	bulletin := createBulletin(identifier, privateKey, title, founder.ID)
 	//
 	//  OK
 	//
 	return &GroupInfo{
-		ID: identifier,
-		Meta: meta,
+		ID:       identifier,
+		Meta:     meta,
 		Bulletin: bulletin,
 	}
+}
+
+//
+//  Document Creation
+//
+
+func createVisa(uid ID, visaKey EncryptKey, idKey SignKey, nickname string, avatar TransportableFile) Visa {
+	doc := &BaseVisa{}
+	if doc.Init() != nil {
+		doc.SetStringer("did", uid)
+		// App ID
+		doc.SetProperty("app_id", "chat.dim.tarsier")
+		// nickname
+		doc.SetName(nickname)
+		// avatar
+		if avatar != nil {
+			doc.SetAvatar(avatar)
+		}
+		// public key
+		doc.SetPublicKey(visaKey)
+	}
+	if idKey != nil {
+		// sign it
+		sig := doc.Sign(idKey)
+		if sig == nil {
+			panic("failed to sign visa: " + uid.String())
+			return nil
+		}
+	}
+	return doc
+}
+
+func createBulletin(gid ID, privateKey SignKey, title string, founder ID) Bulletin {
+	doc := &BaseBulletin{}
+	if doc.Init() != nil {
+		doc.SetStringer("did", gid)
+		// App ID
+		doc.SetProperty("app_id", "chat.dim.tarsier")
+		// group founder
+		doc.SetProperty("founder", founder.String())
+		// group name
+		doc.SetName(title)
+	}
+	// sign it
+	sig := doc.Sign(privateKey)
+	if sig == nil {
+		panic("failed to sign bulletin: " + gid.String())
+		return nil
+	}
+	return doc
 }

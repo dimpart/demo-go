@@ -27,24 +27,27 @@ package dimp
 
 import (
 	"fmt"
+
 	. "github.com/dimchat/mkm-go/format"
 	. "github.com/dimchat/mkm-go/protocol"
-	. "github.com/dimchat/sdk-go/plugins/mkm"
+	. "github.com/dimchat/plugins-go/mkm"
 )
 
-func getName(network NetworkType) string {
+func getName(network EntityType) string {
 	switch network {
-	case ROBOT:
+	case BOT:
 		return "Robot"
 	case STATION:
 		return "Station"
-	case PROVIDER:
+	case ICP:
+		return "CP"
+	case ISP:
 		return "SP"
 	}
-	if NetworkTypeIsUser(network) {
+	if EntityTypeIsUser(network) {
 		return "User"
 	}
-	if NetworkTypeIsGroup(network) {
+	if EntityTypeIsGroup(network) {
 		return "Group"
 	}
 	return "Unknown"

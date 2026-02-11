@@ -1,6 +1,7 @@
 package ext
 
 import (
+	. "github.com/dimchat/core-go/protocol"
 	. "github.com/dimchat/mkm-go/digest"
 	. "github.com/dimchat/mkm-go/protocol"
 	. "github.com/dimchat/plugins-go/ext"
@@ -23,6 +24,9 @@ func (loader CommonPluginLoader) Load() {
 	registerDigesters()
 
 	registerAddressFactory()
+
+	registerMetaFactories()
+
 }
 
 func registerDigesters() {
@@ -49,4 +53,25 @@ func registerAddressFactory() {
 	// Address
 	SetAddressFactory(NewCompatibleAddressFactory())
 
+}
+
+/**
+ *  Meta factories
+ */
+func registerMetaFactories() {
+	mkm := NewCompatibleMetaFactory(MKM)
+	btc := NewCompatibleMetaFactory(BTC)
+	eth := NewCompatibleMetaFactory(ETH)
+
+	SetMetaFactory("1", mkm)
+	SetMetaFactory("2", btc)
+	SetMetaFactory("4", eth)
+
+	SetMetaFactory("mkm", mkm)
+	SetMetaFactory("btc", btc)
+	SetMetaFactory("eth", eth)
+
+	SetMetaFactory("MKM", mkm)
+	SetMetaFactory("BTC", btc)
+	SetMetaFactory("ETH", eth)
 }

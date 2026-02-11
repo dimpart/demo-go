@@ -26,10 +26,12 @@
 package dimp
 
 import (
+	. "github.com/dimchat/core-go/protocol"
 	. "github.com/dimchat/mkm-go/crypto"
 	. "github.com/dimchat/mkm-go/digest"
 	. "github.com/dimchat/mkm-go/format"
-	. "github.com/dimchat/sdk-go/plugins/types"
+	. "github.com/dimchat/mkm-go/types"
+	. "github.com/dimchat/plugins-go/types"
 )
 
 var KeySize = 32
@@ -56,9 +58,9 @@ func GeneratePassword(password string) SymmetricKey {
 	// AES iv
 	iv := digest[KeySize-BlockSize:]
 	// generate AES key
-	key := make(map[string]interface{})
+	key := NewMap()
 	key["algorithm"] = AES
 	key["data"] = Base64Encode(data)
 	key["iv"] = Base64Encode(iv)
-	return SymmetricKeyParse(key)
+	return ParseSymmetricKey(key)
 }

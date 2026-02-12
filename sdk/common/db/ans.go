@@ -28,12 +28,12 @@ package db
 import . "github.com/dimchat/mkm-go/protocol"
 
 const (
-	AnyStation = "station@anywhere"      // MTA: Message Transfer Agent
-	AnyArchivist = "archivist@anywhere"  // Profile manager
-	AnyAssistant = "assistant@anywhere"  // Group manager
+	AnyStation   = "station@anywhere"   // MTA: Message Transfer Agent
+	AnyArchivist = "archivist@anywhere" // Profile manager
+	AnyAssistant = "assistant@anywhere" // Group manager
 )
 
-type AddressNameTable interface {
+type AddressNameDBI interface {
 
 	/**
 	 *  Get ID by short name

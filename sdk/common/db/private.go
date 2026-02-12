@@ -28,14 +28,16 @@ package db
 import (
 	. "github.com/dimchat/mkm-go/crypto"
 	. "github.com/dimchat/mkm-go/protocol"
+	. "github.com/dimchat/mkm-go/types"
 )
 
+//goland:noinspection GoSnakeCaseUsage
 const (
 	META_KEY = "M"
 	VISA_KEY = "V"
 )
 
-type PrivateKeyTable interface {
+type PrivateKeyDBI interface {
 
 	/**
 	 *  Save private key for user
@@ -43,11 +45,9 @@ type PrivateKeyTable interface {
 	 * @param user - user ID
 	 * @param key - private key
 	 * @param type - 'M' for matching meta.key; or 'V' for matching visa.key
-	 * @param sign - whether use for signature
-	 * @param decrypt - whether use for decryption
 	 * @return false on error
 	 */
-	SavePrivateKey(user ID, key PrivateKey, keyType string, sign bool, decrypt bool) bool
+	SavePrivateKey(key PrivateKey, keyType string, user ID) bool
 
 	/**
 	 *  Get private keys for user
@@ -72,4 +72,70 @@ type PrivateKeyTable interface {
 	 * @return the private key matched with meta.key
 	 */
 	GetPrivateKeyForVisaSignature(user ID) PrivateKey
+}
+
+//
+//  Conveniences
+//
+
+func ConvertDecryptKeys(privateKeys []PrivateKey) []DecryptKey {
+	decryptKeys := make([]DecryptKey, 0, len(privateKeys))
+	for _, item := range privateKeys {
+		if key, ok := item.(DecryptKey); ok {
+			decryptKeys = append(decryptKeys, key)
+		}
+	}
+	return decryptKeys
+}
+
+func ConvertPrivateKeys(decryptKeys []DecryptKey) []PrivateKey {
+	privateKeys := make([]PrivateKey, 0, len(decryptKeys))
+	for _, item := range decryptKeys {
+		if key, ok := item.(PrivateKey); ok {
+			privateKeys = append(privateKeys, key)
+		}
+	}
+	return privateKeys
+}
+
+func RevertPrivateKeys(privateKeys []PrivateKey) []StringKeyMap {
+	array := make([]StringKeyMap, len(privateKeys))
+	for index, item := range privateKeys {
+		array[index] = item.Map()
+	}
+	return array
+}
+
+func InsertPrivateKey(key PrivateKey, privateKeys []PrivateKey) []PrivateKey {
+	index := FindPrivateKey(key, privateKeys)
+	if index == 0 {
+		// nothing change
+		return nil
+	} else if index > 0 {
+		// move to the front
+		privateKeys = append(privateKeys[:index], privateKeys[index+1:]...)
+	} else {
+		// private key not found,
+		// prepare to insert
+		size := len(privateKeys)
+		if size > 2 {
+			// keep only last three records
+			privateKeys = privateKeys[:size]
+		}
+	}
+	// insert to the front
+	return append([]PrivateKey{key}, privateKeys...)
+}
+
+func FindPrivateKey(key PrivateKey, privateKeys []PrivateKey) int {
+	data := key.GetString("data", "")
+	if data == "" {
+		panic("private key data not found")
+	}
+	for index, item := range privateKeys {
+		if item.Get("data") == data {
+			return index
+		}
+	}
+	return -1
 }

@@ -25,23 +25,93 @@
  */
 package db
 
-import . "github.com/dimchat/mkm-go/protocol"
+import (
+	. "github.com/dimchat/core-go/protocol"
+	. "github.com/dimchat/dkd-go/protocol"
+	. "github.com/dimchat/mkm-go/protocol"
+	. "github.com/dimpart/demo-go/sdk/utils"
+)
 
-type GroupTable interface {
+type GroupDBI interface {
 
-	GetFounder(group ID) ID
+	/**
+	 *  Get group founder/owner from DB
+	 */
+	LoadFounder(group ID) ID
+	LoadOwner(group ID) ID
 
-	GetOwner(group ID) ID
-
-	GetMembers(group ID) []ID
-
-	GetAssistants(group ID) []ID
-
-	AddMember(member ID, group ID) bool
-
-	RemoveMember(member ID, group ID) bool
-
+	/**
+	 *  Get group members from DB
+	 */
+	LoadMembers(group ID) []ID
 	SaveMembers(members []ID, group ID) bool
 
-	RemoveGroup(group ID) bool
+	/**
+	 *  Get group admins from DB
+	 */
+	LoadAdministrators(group ID) []ID
+	SaveAdministrators(members []ID, group ID) bool
+}
+
+type GroupHistoryDBI interface {
+
+	/**
+	 *  Save group commands
+	 *      1. invite
+	 *      2. expel (deprecated)
+	 *      3. join
+	 *      4. quit
+	 *      5. reset
+	 *      6. resign
+	 *
+	 * @param content - group command
+	 * @param rMsg    - group command message
+	 * @param group   - group ID
+	 * @return false on failed
+	 */
+	SaveGroupHistory(content GroupCommand, rMsg ReliableMessage, group ID) bool
+
+	/**
+	 *  Load group commands
+	 *      1. invite
+	 *      2. expel (deprecated)
+	 *      3. join
+	 *      4. quit
+	 *      5. reset
+	 *      6. resign
+	 *
+	 * @param group - group ID
+	 * @return history list
+	 */
+	LoadGroupHistories(group ID) []*Pair[GroupCommand, ReliableMessage]
+
+	/**
+	 *  Load last 'reset' group command
+	 *
+	 * @param group - group ID
+	 * @return reset command message
+	 */
+	LoadResetCommandMessage(group ID) *Pair[ResetCommand, ReliableMessage]
+
+	/**
+	 *  Clean group commands for members:
+	 *      1. invite
+	 *      2. expel (deprecated)
+	 *      3. join
+	 *      4. quit
+	 *      5. reset
+	 *
+	 * @param group - group ID
+	 * @return false on failed
+	 */
+	ClearGroupMemberHistories(group ID) bool
+
+	/**
+	 *  Clean group commands for administrators
+	 *      1. resign
+	 *
+	 * @param group - group ID
+	 * @return false on failed
+	 */
+	ClearGroupAdminHistories(group ID)
 }

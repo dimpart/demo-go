@@ -25,11 +25,35 @@
  */
 package db
 
-import . "github.com/dimchat/mkm-go/protocol"
+import (
+	. "github.com/dimchat/dkd-go/protocol"
+	. "github.com/dimchat/mkm-go/protocol"
+	. "github.com/dimpart/demo-go/sdk/common/protocol"
+	. "github.com/dimpart/demo-go/sdk/utils"
+)
 
-type MetaTable interface {
+type LoginDBI interface {
 
-	SaveMeta(meta Meta, entity ID) bool
+	/**
+	 *  Get last login command/message for user
+	 *
+	 * @param user - user ID
+	 * @return LoginCommand, ReliableMessage
+	 */
+	LoadLoginCommandMessage(user ID) *Pair[LoginCommand, ReliableMessage]
 
-	GetMeta(entity ID) Meta
+	/**
+	 *  Save last login command for user
+	 *
+	 * @param command - login command with user ID
+	 * @return false on failed
+	 */
+	SaveLoginCommandMessage(user ID, content LoginCommand, rMsg ReliableMessage) bool
+}
+
+type SessionDBI interface {
+	LoginDBI
+
+	ProviderDBI
+	StationDBI
 }

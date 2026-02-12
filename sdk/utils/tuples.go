@@ -2,7 +2,7 @@
  * ==============================================================================
  * The MIT License (MIT)
  *
- * Copyright (c) 2021 Albert Moky
+ * Copyright (c) 2026 Albert Moky
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,37 +23,68 @@
  * SOFTWARE.
  * ==============================================================================
  */
-package db
+package utils
 
-import (
-	. "github.com/dimchat/dkd-go/protocol"
-	. "github.com/dimchat/mkm-go/protocol"
-	. "github.com/dimchat/sdk-go/dimp/protocol"
-)
-
-type LoginTable interface {
-
-	/**
-	 *  Get last login command for user
-	 *
-	 * @param user - user ID
-	 * @return LoginCommand
-	 */
-	GetLoginCommand(user ID) LoginCommand
-
-	/**
-	 *  Get last login message sent by user
-	 *
-	 * @param user - user ID
-	 * @return ReliableMessage
-	 */
-	GetLoginMessage(user ID) ReliableMessage
-
-	/**
-	 *  Save last login command for user
-	 *
-	 * @param command - login command with user ID
-	 * @return false on failed
-	 */
-	SaveLoginCommandMessage(cmd LoginCommand, msg ReliableMessage) bool
+type Pair[A, B any] struct {
+	First  A
+	Second B
 }
+
+type Triplet[A, B, C any] struct {
+	First  A
+	Second B
+	Third  C
+}
+
+//type Quartet[A, B, C, D any] struct {
+//	First  A
+//	Second B
+//	Third  C
+//	Fourth D
+//}
+//
+//type Quintet[A, B, C, D, E any] struct {
+//	First  A
+//	Second B
+//	Third  C
+//	Fourth D
+//	Fifth  E
+//}
+
+//
+//  Creation
+//
+
+func NewPair[A, B any](first A, second B) *Pair[A, B] {
+	return &Pair[A, B]{
+		First:  first,
+		Second: second,
+	}
+}
+
+func NewTriplet[A, B, C any](first A, second B, third C) *Triplet[A, B, C] {
+	return &Triplet[A, B, C]{
+		First:  first,
+		Second: second,
+		Third:  third,
+	}
+}
+
+//func NewQuartet[A, B, C, D any](first A, second B, third C, fourth D) *Quartet[A, B, C, D] {
+//	return &Quartet[A, B, C, D]{
+//		First:  first,
+//		Second: second,
+//		Third:  third,
+//		Fourth: fourth,
+//	}
+//}
+//
+//func NewQuintet[A, B, C, D, E any](first A, second B, third C, fourth D, fifth E) *Quintet[A, B, C, D, E] {
+//	return &Quintet[A, B, C, D, E]{
+//		First:  first,
+//		Second: second,
+//		Third:  third,
+//		Fourth: fourth,
+//		Fifth:  fifth,
+//	}
+//}

@@ -27,15 +27,55 @@ package db
 
 import . "github.com/dimchat/mkm-go/protocol"
 
-type UserTable interface {
+type MetaDBI interface {
 
-	AllUsers() []ID
+	/**
+	 *  Get meta from DB
+	 */
+	LoadMeta(entity ID) Meta
 
-	AddUser(user ID) bool
+	SaveMeta(meta Meta, entity ID) bool
+}
 
-	RemoveUser(user ID) bool
+type DocumentDBI interface {
 
-	SetCurrentUser(user ID)
+	/**
+	 *  Get documents from DB
+	 */
+	LoadDocuments(entity ID) []Document
 
-	GetCurrentUser() ID
+	SaveDocument(doc Document, entity ID) bool
+}
+
+type UserDBI interface {
+
+	/**
+	 *  Get local user ID list
+	 */
+	LoadUsers() []ID
+
+	SaveUsers(users []ID) bool
+}
+
+type ContactDBI interface {
+
+	/**
+	 *  Get contacts from DB
+	 */
+	LoadContacts() []ID
+
+	SaveContacts(contacts []ID, user ID) bool
+}
+
+type AccountDBI interface {
+	PrivateKeyDBI
+
+	MetaDBI
+	DocumentDBI
+
+	UserDBI
+	ContactDBI
+
+	GroupDBI
+	GroupHistoryDBI
 }

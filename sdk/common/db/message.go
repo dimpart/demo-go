@@ -25,11 +25,57 @@
  */
 package db
 
-import . "github.com/dimchat/mkm-go/protocol"
+import (
+	. "github.com/dimchat/mkm-go/crypto"
+	. "github.com/dimchat/mkm-go/protocol"
+	. "github.com/dimchat/mkm-go/types"
+)
 
-type DocumentTable interface {
+type CipherKeyDBI interface {
 
-	SaveDocument(doc Document) bool
+	/**
+	 *  Get cipher key for encrypt message from 'sender' to 'receiver'
+	 *
+	 * @param sender   - from where (user or contact ID)
+	 * @param receiver - to where (contact or user/group ID)
+	 * @return cipher key
+	 */
+	LoadCipherKey(sender, receiver ID) SymmetricKey
 
-	GetDocument(entity ID, docType string) Document
+	/**
+	 *  Cache cipher key for reusing, with the direction (from 'sender' to 'receiver')
+	 *
+	 * @param sender   - from where (user or contact ID)
+	 * @param receiver - to where (contact or user/group ID)
+	 * @param key      - cipher key
+	 */
+	SaveCipherKey(sender, receiver ID, key SymmetricKey) bool
+}
+
+type GroupKeysDBI interface {
+
+	/**
+	 *  Get encrypted message keys for group
+	 *
+	 * @param group  - group ID
+	 * @param sender - member ID
+	 * @return encoded message keys
+	 */
+	LoadGroupKeys(group, sender ID) SymmetricKeyHelper
+
+	/**
+	 *  Save encrypted message keys for group
+	 *
+	 * @param group  - group ID
+	 * @param sender - member ID
+	 * @param keys   - encoded message keys
+	 * @return true on success
+	 */
+	SaveGroupKeys(group, sender ID, keys StringKeyMap) bool
+}
+
+type MessageDBI interface {
+	CipherKeyDBI
+
+	GroupKeysDBI
 }

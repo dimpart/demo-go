@@ -2,7 +2,7 @@
  * ==============================================================================
  * The MIT License (MIT)
  *
- * Copyright (c) 2021 Albert Moky
+ * Copyright (c) 2026 Albert Moky
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,59 +23,60 @@
  * SOFTWARE.
  * ==============================================================================
  */
-package db
+package utils
 
-import . "github.com/dimchat/mkm-go/protocol"
+import (
+	"sync"
 
-type MetaDBI interface {
+	. "github.com/dimchat/mkm-go/types"
+)
 
-	/**
-	 *  Get meta from DB
-	 */
-	LoadMeta(entity ID) Meta
-
-	SaveMeta(meta Meta, entity ID) bool
+type IRecentTimeChecker[K comparable] interface {
+	SetLastTime(key K, now Time) bool
+	IsExpired(key K, now Time) bool
 }
 
-type DocumentDBI interface {
-
-	/**
-	 *  Get documents from DB
-	 */
-	LoadDocuments(entity ID) []Document
-
-	SaveDocument(doc Document, entity ID) bool
+func NewRecentTimeChecker[K comparable]() IRecentTimeChecker[K] {
+	checker := &RecentTimeChecker[K]{}
+	return checker.Init()
 }
 
-type UserDBI interface {
+type RecentTimeChecker[K comparable] struct {
+	//IRecentTimeChecker
 
-	/**
-	 *  Get local user ID list
-	 */
-	LoadLocalUsers() []ID
-
-	SaveLocalUsers(users []ID) bool
+	times map[K]Time
+	lock  sync.Mutex
 }
 
-type ContactDBI interface {
-
-	/**
-	 *  Get contacts from DB
-	 */
-	LoadContacts() []ID
-
-	SaveContacts(contacts []ID, user ID) bool
+func (checker *RecentTimeChecker[K]) Init() IRecentTimeChecker[K] {
+	checker.times = make(map[K]Time, 1024)
+	return checker
 }
 
-type AccountDBI interface {
-	PrivateKeyDBI
+// Override
+func (checker *RecentTimeChecker[K]) SetLastTime(key K, now Time) bool {
+	if now == nil {
+		//panic("recent time empty")
+		return false
+	}
+	// TODO: calibration clock
 
-	MetaDBI
-	DocumentDBI
+	checker.lock.Lock()
+	defer checker.lock.Unlock()
+	last := checker.times[key]
+	if last == nil || TimeIsBefore(now, last) {
+		checker.times[key] = now
+		return true
+	}
+	return false
+}
 
-	UserDBI
-	ContactDBI
-
-	GroupDBI
-	GroupHistoryDBI
+// Override
+func (checker *RecentTimeChecker[K]) IsExpired(key K, now Time) bool {
+	if now == nil {
+		//panic("recent time empty")
+		return true
+	}
+	last := checker.times[key]
+	return last != nil && TimeIsAfter(now, last)
 }

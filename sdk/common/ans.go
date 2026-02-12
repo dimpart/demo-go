@@ -26,96 +26,73 @@
 package dimp
 
 import (
-	. "github.com/dimchat/demo-go/sdk/common/db"
+	. "github.com/dimchat/mkm-go/mkm"
 	. "github.com/dimchat/mkm-go/protocol"
 	. "github.com/dimchat/mkm-go/types"
-	. "github.com/dimchat/sdk-go/dimp"
+	. "github.com/dimpart/demo-go/sdk/common/protocol"
 )
 
 /**
- *  Data Source for ANS
- *  ~~~~~~~~~~~~~~~~~~~
+ *  ANS
  */
-type AddressNameDataSource struct {
-	AddressNameServer
+type AddressNameServer struct {
+	//AddressNameService
 
-	_ansTable AddressNameTable
+	_reserved   map[string]bool
+	_caches     map[string]ID
+	_namesTable map[ID][]string
 }
 
-func (ans *AddressNameDataSource) Init() *AddressNameDataSource {
-	if ans.AddressNameServer.Init() != nil {
-		ans._ansTable = nil
+func (ans *AddressNameServer) Init() AddressNameService {
+	// reserved names
+	ans._reserved = make(map[string]bool, len(KEYWORDS))
+	for _, item := range KEYWORDS {
+		ans._reserved[item] = true
 	}
+
+	// constant ANS records
+	ans._caches = make(map[string]ID, 1024)
+	ans.setID("all", EVERYONE)
+	ans.setID("everyone", EVERYONE)
+	ans.setID("anyone", ANYONE)
+	ans.setID("owner", ANYONE)
+	ans.setID("founder", FOUNDER)
+
+	// temp
+	ans._namesTable = make(map[ID][]string, 128)
+
 	return ans
 }
 
-func (ans *AddressNameDataSource) GetID(alias string) ID {
-	identifier := ans.AddressNameServer.GetID(alias)
-	if identifier == nil && ans._ansTable != nil {
-		identifier = ans._ansTable.GetIdentifier(alias)
-		if identifier != nil {
-			// FIXME: is reserved name?
-			ans.Cache(alias, identifier)
+func (ans *AddressNameServer) setID(name string, identifier ID) {
+	if ValueIsNil(identifier) {
+		delete(ans._caches, name)
+	} else {
+		ans._caches[name] = identifier
+	}
+}
+
+// Override
+func (ans *AddressNameServer) IsReserved(name string) bool {
+	return ans._reserved[name]
+}
+
+// Override
+func (ans *AddressNameServer) GetID(name string) ID {
+	return ans._caches[name]
+}
+
+// Override
+func (ans *AddressNameServer) GetNames(identifier ID) []string {
+	array := ans._namesTable[identifier]
+	if array == nil {
+		array = make([]string, 0, 1)
+		// TODO: update all tables?
+		for key, value := range ans._caches {
+			if identifier.Equal(value) {
+				array = append(array, key)
+			}
 		}
 	}
-	return identifier
-}
-
-func (ans *AddressNameDataSource) Save(alias string, identifier ID) bool {
-	if ans.AddressNameServer.Save(alias, identifier) == false {
-		return false
-	} else if ValueIsNil(identifier) {
-		return ans._ansTable.RemoveRecord(alias)
-	} else {
-		return ans._ansTable.AddRecord(identifier, alias)
-	}
-}
-
-/**
- *  ID Factory
- *  ~~~~~~~~~~
- */
-type CommonIDFactory struct {
-	IDFactory
-
-	_ans AddressNameService
-	_origin IDFactory
-}
-
-func (factory *CommonIDFactory) Init(ans AddressNameService, origin IDFactory) *CommonIDFactory {
-	factory._ans = ans
-	factory._origin = origin
-	return factory
-}
-
-func (factory *CommonIDFactory) GenerateID(meta Meta, network NetworkType, terminal string) ID {
-	return factory._origin.GenerateID(meta, network, terminal)
-}
-
-func (factory *CommonIDFactory) CreateID(name string, address Address, terminal string) ID {
-	return factory._origin.CreateID(name, address, terminal)
-}
-
-func (factory *CommonIDFactory) ParseID(identifier string) ID {
-	// try ANS record
-	id := factory._ans.GetID(identifier)
-	if id == nil {
-		// parse by original factory
-		id = factory._origin.ParseID(identifier)
-	}
-	return id
-}
-
-func UpgradeIDFactory() {
-	// ANS
-	ans := new(AddressNameDataSource)
-	ans.Init()
-
-	// origin ID factory
-	origin := IDGetFactory()
-
-	// wrap
-	factory := new(CommonIDFactory)
-	factory.Init(ans, origin)
-	IDSetFactory(factory)
+	return array
 }

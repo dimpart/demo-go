@@ -76,6 +76,11 @@ type Station interface {
 	Port() uint16
 }
 
+func NewStation(did ID) Station {
+	station := &BaseStation{}
+	return station.Init(did, "", 0)
+}
+
 type BaseStation struct {
 	//User
 

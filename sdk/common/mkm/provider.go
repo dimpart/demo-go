@@ -51,6 +51,11 @@ type Provider interface {
 	Stations() []StringKeyMap
 }
 
+func NewProvider(pid ID) Provider {
+	provider := &ServiceProvider{}
+	return provider.Init(pid)
+}
+
 /**
  *  DIM Station Owner
  *  ~~~~~~~~~~~~~~~~~

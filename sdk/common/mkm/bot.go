@@ -55,6 +55,11 @@ type Bot interface {
 	Provider() ID
 }
 
+func NewBot(did ID) Bot {
+	bot := &BotUser{}
+	return bot.Init(did)
+}
+
 type BotUser struct {
 	BaseUser
 }

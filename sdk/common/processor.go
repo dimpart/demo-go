@@ -26,127 +26,77 @@
 package dimp
 
 import (
-	. "github.com/dimchat/core-go/protocol"
 	. "github.com/dimchat/dkd-go/protocol"
-	. "github.com/dimchat/mkm-go/protocol"
-	. "github.com/dimchat/sdk-go/dimp"
-	"strings"
+	. "github.com/dimchat/mkm-go/types"
+	. "github.com/dimchat/sdk-go/core"
+	. "github.com/dimchat/sdk-go/sdk"
+	. "github.com/dimpart/demo-go/sdk/utils"
 )
+
+type ICommonMessageProcessor interface {
+	Processor
+
+	GetEntityChecker() IEntityChecker
+}
 
 /**
  *  Common Processor
  *  ~~~~~~~~~~~~~~~~
  */
-type CommonProcessor struct {
+type CommonMessageProcessor struct {
+	//ICommonMessageProcessor
 	MessageProcessor
 }
 
-func (processor *CommonProcessor) CommonMessenger() ICommonMessenger {
-	return processor.Messenger().(ICommonMessenger)
-}
-
-func (processor *CommonProcessor) CommonFacebook() ICommonFacebook {
-	return processor.Facebook().(ICommonFacebook)
-}
-
-// check whether group info empty
-func (processor *CommonProcessor) isEmptyGroup(group ID) bool {
-	facebook := processor.Facebook()
-	members := facebook.GetMembers(group)
-	if members == nil || len(members) == 0 {
-		return true
-	} else {
-		return facebook.GetOwner(group) == nil
+func (processor *CommonMessageProcessor) Init(facebook IFacebook, messenger IMessenger) ICommonMessageProcessor {
+	if processor.MessageProcessor.Init(facebook, messenger) != nil {
 	}
+	return processor
 }
 
-// check whether need to update group
-func (processor *CommonProcessor) isWaitingGroup(content Content, sender ID) bool {
-	// Check if it is a group message, and whether the group members info needs update
-	group := content.Group()
-	if group == nil || group.IsBroadcast() {
-		// 1. personal message
-		// 2. broadcast message
+// protected
+func (processor *CommonMessageProcessor) GetEntityChecker() IEntityChecker {
+	facebook := processor.GetFacebook()
+	if cf, ok := facebook.(ICommonFacebook); ok {
+		return cf.GetEntityChecker()
+	}
+	return nil
+}
+
+func (processor *CommonMessageProcessor) checkVisaTime(content Content, rMsg ReliableMessage) bool {
+	checker := processor.GetEntityChecker()
+	if checker == nil {
+		panic("should not happen")
 		return false
 	}
-	// check meta for new group ID
-	messenger := processor.CommonMessenger()
-	facebook := processor.CommonFacebook()
-	meta := facebook.GetMeta(group)
-	if meta == nil {
-		// NOTICE: if meta for group not found,
-		//         facebook should query it from DIM network automatically
-		// TODO: insert the message to a temporary queue to wait meta
-		//throw new NullPointerException("group meta not found: " + group);
-		return true
+	docUpdate := false
+	// check sender document time
+	lastDocTime := rMsg.GetTime("SDT", nil)
+	if lastDocTime != nil {
+		now := TimeNow()
+		if TimeIsAfter(now, lastDocTime) {
+			// calibrate the clock
+			lastDocTime = now
+		}
+		sender := rMsg.Sender()
+		docUpdate = checker.SetLastDocumentTime(sender, lastDocTime)
+		// check whether it needs update now
+		if docUpdate {
+			// checking for new visa
+			facebook := processor.GetFacebook()
+			facebook.GetDocuments(sender)
+		}
 	}
-	// query group info
-	if processor.isEmptyGroup(group) {
-		// NOTICE: if the group info not found, and this is not an 'invite' command
-		//         query group info from the sender
-		cmd, ok := content.(Command)
-		if ok {
-			name := cmd.CommandName()
-			if name == INVITE || name == RESET {
-				// FIXME: can we trust this stranger?
-				//        may be we should keep this members list temporary,
-				//        and send 'query' to the owner immediately.
-				// TODO: check whether the members list is a full list,
-				//       it should contain the group owner(owner)
-				return false
-			}
-		}
-		return messenger.QueryGroupInfo(group, []ID{sender})
-	} else if facebook.ContainMember(sender, group) ||
-		facebook.ContainAssistant(sender, group) ||
-		facebook.IsOwner(sender, group) {
-		// normal membership
-		return false
-	} else {
-		var ok1, ok2 bool
-		// if assistants exist, query them
-		bots := facebook.GetAssistants(group)
-		if bots == nil || len(bots) == 0 {
-			ok1 = false
-		} else {
-			ok1 = messenger.QueryGroupInfo(group, bots)
-		}
-		// if owner found, query it too
-		owner := facebook.GetOwner(group)
-		if owner == nil {
-			ok2 = false
-		} else {
-			ok2 = messenger.QueryGroupInfo(group, []ID{owner})
-		}
-		return ok1 && ok2
-	}
+	return docUpdate
 }
 
-func (processor *CommonProcessor) ProcessContent(content Content, rMsg ReliableMessage) []Content {
-	sender := rMsg.Sender()
-	if processor.isWaitingGroup(content, sender) {
-		// save this message in a queue to wait group meta response
-		group := content.Group()
-		rMsg.Set("waiting", group.String())
-		//processor.CommonMessenger().SuspendReliableMessage(rMsg)
-		return nil
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			text, ok := r.(string)
-			if ok && strings.Contains(text, "failed to get meta for") {
-				pos := strings.Index(text, ": ")
-				if pos > 0 {
-					waiting := IDParse(text[pos+2:])
-					if waiting == nil {
-						panic("failed to get ID: " + text)
-					} else {
-						rMsg.Set("waiting", waiting.String())
-						//processor.CommonMessenger().SuspendReliableMessage(rMsg)
-					}
-				}
-			}
-		}
-	}()
-	return processor.MessageProcessor.ProcessContent(content, rMsg)
+// Override
+func (processor *CommonMessageProcessor) ProcessContent(content Content, rMsg ReliableMessage) []Content {
+	responses := processor.MessageProcessor.ProcessContent(content, rMsg)
+
+	// check sender's document times from the message
+	// to make sure the user info synchronized
+	processor.checkVisaTime(content, rMsg)
+
+	return responses
 }

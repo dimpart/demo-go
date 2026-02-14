@@ -1,4 +1,9 @@
 /* license: https://mit-license.org
+ *
+ *  DIMP : Decentralized Instant Messaging Protocol
+ *
+ *                                Written in 2026 by Moky <albert.moky@gmail.com>
+ *
  * ==============================================================================
  * The MIT License (MIT)
  *
@@ -23,78 +28,47 @@
  * SOFTWARE.
  * ==============================================================================
  */
-package utils
+package dkd
 
-type Pair[A, B any] interface {
-	First() A
-	Second() B
-}
-
-type Triplet[A, B, C any] interface {
-	First() A
-	Second() B
-	Third() C
-}
-
-// TODO: Quartet[A, B, C, D any]
-
-// TODO: Quintet[A, B, C, D, E any]
+import (
+	. "github.com/dimchat/core-go/protocol"
+	. "github.com/dimchat/dkd-go/protocol"
+	. "github.com/dimchat/mkm-go/protocol"
+)
 
 //
-//  Creation
+//  Message Utils
 //
 
-func NewPair[A, B any](first A, second B) Pair[A, B] {
-	return &PairItems[A, B]{
-		A: first,
-		B: second,
+/**
+ *  Sender's Meta
+ *  <p>
+ *      Extends for the first message package of 'Handshake' protocol.
+ *  </p>
+ */
+func GetMetaAttachment(msg Message) Meta {
+	meta := msg.Get("meta")
+	return ParseMeta(meta)
+}
+
+func SetMetaAttachment(meta Meta, msg Message) {
+	msg.SetMapper("meta", meta)
+}
+
+/**
+ *  Sender's Visa
+ *  <p>
+ *      Extends for the first message package of 'Handshake' protocol.
+ *  </p>
+ */
+func GetVisaAttachment(msg Message) Visa {
+	doc := msg.Get("visa")
+	if visa, ok := doc.(Visa); ok {
+		return visa
 	}
+	return nil
 }
 
-func NewTriplet[A, B, C any](first A, second B, third C) Triplet[A, B, C] {
-	return &TripletItems[A, B, C]{
-		A: first,
-		B: second,
-		C: third,
-	}
-}
-
-//-------- Implementation: Pair
-
-type PairItems[A, B any] struct {
-	A A
-	B B
-}
-
-// Override
-func (pair *PairItems[A, B]) First() A {
-	return pair.A
-}
-
-// Override
-func (pair *PairItems[A, B]) Second() B {
-	return pair.B
-}
-
-//-------- Implementation: Triplet
-
-type TripletItems[A, B, C any] struct {
-	A A
-	B B
-	C C
-}
-
-// Override
-func (triplet *TripletItems[A, B, C]) First() A {
-	return triplet.A
-}
-
-// Override
-func (triplet *TripletItems[A, B, C]) Second() B {
-	return triplet.B
-}
-
-// Override
-func (triplet *TripletItems[A, B, C]) Third() C {
-	return triplet.C
+func SetVisaAttachment(visa Visa, msg Message) {
+	msg.SetMapper("visa", visa)
 }

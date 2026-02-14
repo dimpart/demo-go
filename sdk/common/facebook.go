@@ -40,6 +40,9 @@ import (
 type ICommonFacebook interface {
 	IFacebook
 
+	GetDatabase() AccountDBI
+	GetEntityChecker() IEntityChecker
+
 	//
 	//  Current User
 	//
@@ -81,6 +84,14 @@ type CommonFacebook struct {
 //	return facebook
 //}
 
+func (facebook *CommonFacebook) GetDatabase() AccountDBI {
+	return facebook.Database
+}
+
+func (facebook *CommonFacebook) GetEntityChecker() IEntityChecker {
+	return facebook.Checker
+}
+
 //
 //  Current User
 //
@@ -91,7 +102,7 @@ func (facebook *CommonFacebook) GetCurrentUser() User {
 		return currentUser
 	}
 	users := facebook.Database.LoadLocalUsers()
-	if users == nil || len(users) == 0 {
+	if len(users) == 0 {
 		return nil
 	}
 	currentUser = facebook.GetUser(users[0])

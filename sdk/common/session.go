@@ -23,78 +23,65 @@
  * SOFTWARE.
  * ==============================================================================
  */
-package utils
+package dimp
 
-type Pair[A, B any] interface {
-	First() A
-	Second() B
+import (
+	"fmt"
+
+	. "github.com/dimchat/dkd-go/protocol"
+	. "github.com/dimchat/mkm-go/protocol"
+	. "github.com/dimchat/mkm-go/types"
+	. "github.com/dimpart/demo-go/sdk/common/db"
+)
+
+type SocketAddress interface {
+	fmt.Stringer
+
+	Host() string
+	Port() uint16
 }
 
-type Triplet[A, B, C any] interface {
-	First() A
-	Second() B
-	Third() C
-}
+type Session interface {
+	Transmitter
 
-// TODO: Quartet[A, B, C, D any]
+	GetDatabase() SessionDBI
 
-// TODO: Quintet[A, B, C, D, E any]
+	/**
+	 *  Get remote socket address
+	 *
+	 * @return host & port
+	 */
+	GetRemoteAddress() SocketAddress
 
-//
-//  Creation
-//
+	// session key
+	GetSessionKey() string
 
-func NewPair[A, B any](first A, second B) Pair[A, B] {
-	return &PairItems[A, B]{
-		A: first,
-		B: second,
-	}
-}
+	/**
+	 *  Update user ID
+	 *
+	 * @param uid - login user ID
+	 * @return true on changed
+	 */
+	SetID(uid ID) bool
+	GetID() ID
 
-func NewTriplet[A, B, C any](first A, second B, third C) Triplet[A, B, C] {
-	return &TripletItems[A, B, C]{
-		A: first,
-		B: second,
-		C: third,
-	}
-}
+	/**
+	 *  Update active flag
+	 *
+	 * @param active - flag
+	 * @param when   - now
+	 * @return true on changed
+	 */
+	SetActive(active bool, when Time) bool
+	IsActive() bool
 
-//-------- Implementation: Pair
-
-type PairItems[A, B any] struct {
-	A A
-	B B
-}
-
-// Override
-func (pair *PairItems[A, B]) First() A {
-	return pair.A
-}
-
-// Override
-func (pair *PairItems[A, B]) Second() B {
-	return pair.B
-}
-
-//-------- Implementation: Triplet
-
-type TripletItems[A, B, C any] struct {
-	A A
-	B B
-	C C
-}
-
-// Override
-func (triplet *TripletItems[A, B, C]) First() A {
-	return triplet.A
-}
-
-// Override
-func (triplet *TripletItems[A, B, C]) Second() B {
-	return triplet.B
-}
-
-// Override
-func (triplet *TripletItems[A, B, C]) Third() C {
-	return triplet.C
+	/**
+	 *  Pack message into a waiting queue
+	 *
+	 * @param rMsg     - network message
+	 * @param data     - serialized message
+	 * @param priority - smaller is faster
+	 * @return false on error
+	 */
+	QueueMessagePackage(rMsg ReliableMessage, data []byte, priority int) bool
 }

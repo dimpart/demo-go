@@ -7,7 +7,7 @@ require (
 	github.com/dimchat/dkd-go v0.4.1-0.20260131194623-66282771cb1b
 	github.com/dimchat/mkm-go v0.3.1-0.20260131165850-455224233aeb
 	github.com/dimchat/plugins-go v0.0.0-20260211164951-4826881ddcf7
-	github.com/dimchat/sdk-go v0.4.1-0.20260209203924-2684914cab2f
+	github.com/dimchat/sdk-go v0.4.1-0.20260214123932-5563049f1a0b
 	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
 )
 

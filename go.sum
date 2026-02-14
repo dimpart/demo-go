@@ -1,4 +1,3 @@
-github.com/dimchat/core-go v0.4.1-0.20260206181553-8767009017ab/go.mod h1:3lCoumGJJJBCaa+Z3wPYjjlsZklvDiHD+5oDXgbQykA=
 github.com/dimchat/core-go v0.4.1-0.20260207173006-2219482479b9 h1:fsRiiRUnvrhbSnKa92WD0igGJNFA/SjDDTkL9PWv1Oc=
 github.com/dimchat/core-go v0.4.1-0.20260207173006-2219482479b9/go.mod h1:3lCoumGJJJBCaa+Z3wPYjjlsZklvDiHD+5oDXgbQykA=
 github.com/dimchat/dkd-go v0.4.1-0.20260131194623-66282771cb1b h1:POt8SAUJBQKUrv6Ptvum+fCGW5IOYGUvDfev4d9dvTo=
@@ -7,8 +6,8 @@ github.com/dimchat/mkm-go v0.3.1-0.20260131165850-455224233aeb h1:z1ucd0uXI0cQls
 github.com/dimchat/mkm-go v0.3.1-0.20260131165850-455224233aeb/go.mod h1:rRD77W4jdUAkfNA2fBa+co3/ADLpuTE9EXtlrldz39U=
 github.com/dimchat/plugins-go v0.0.0-20260211164951-4826881ddcf7 h1:XAZj1Jkzs/oB73fZQdms4oSbnc/758c1RUSScVM2D80=
 github.com/dimchat/plugins-go v0.0.0-20260211164951-4826881ddcf7/go.mod h1:c104TQFvYlVGW8a+1Q24ac0H+nygA3Mq/JiWwkfrBtQ=
-github.com/dimchat/sdk-go v0.4.1-0.20260209203924-2684914cab2f h1:48JHXxgV8Facks7JNSV8r6Ql8A4Dh5ErKzGExKf0k/U=
-github.com/dimchat/sdk-go v0.4.1-0.20260209203924-2684914cab2f/go.mod h1:vcO0zj3noJAjGrC0/WIdd0PmYtIlA70YXWnmPRKaOJM=
+github.com/dimchat/sdk-go v0.4.1-0.20260214123932-5563049f1a0b h1:3bihLolSLQBR9fBvO2CJbjZXNFwdAxOYNMQixqXRCN4=
+github.com/dimchat/sdk-go v0.4.1-0.20260214123932-5563049f1a0b/go.mod h1:gvesg35s7RIPNC2uhOij5ie7hErCPBfKaabXQkVounc=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83 h1:/ZScEX8SfEmUGRHs0gxpqteO5nfNW6axyZbBdw9A12g=
 golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83/go.mod h1:jdWPYTVW3xRLrWPugEBEK3UY2ZEsg3UU495nc5E+M+I=

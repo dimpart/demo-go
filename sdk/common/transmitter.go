@@ -25,60 +25,172 @@
  */
 package dimp
 
-//import (
-//	. "github.com/dimchat/dkd-go/protocol"
-//	. "github.com/dimchat/sdk-go/dimp"
-//)
-//
-//type ICommonTransmitter interface {
-//	IMessengerExtension
-//}
-//
-///**
-// *  Common Processor
-// *  ~~~~~~~~~~~~~~~~
-// *
-// *  Abstract Methods:
-// *      // IMessengerExtension
-// *      QueryMeta(identifier ID) bool
-// *      QueryDocument(identifier ID, docType string) bool
-// *      QueryGroupInfo(group ID, members []ID) bool
-// */
-//type CommonTransmitter struct {
-//	MessengerHelper
-//}
-//
-//func (transmitter *CommonTransmitter) CommonMessenger() ICommonMessenger {
-//	return transmitter.Messenger().(ICommonMessenger)
-//}
-//
-//func (transmitter *CommonTransmitter) CommonFacebook() ICommonFacebook {
-//	return transmitter.Facebook().(ICommonFacebook)
-//}
-//
-//func (transmitter *CommonTransmitter) SendInstantMessage(iMsg InstantMessage, callback MessengerCallback, priority int) bool {
-//	go func() {
-//		messenger := transmitter.CommonMessenger()
-//		sMsg := messenger.EncryptMessage(iMsg)
-//		if sMsg == nil {
-//			// public key not found?
-//			//panic(iMsg)
-//			return
-//		}
-//		rMsg := messenger.SignMessage(sMsg)
-//		if rMsg == nil {
-//			// TODO: set iMsg.state = error
-//			panic(sMsg)
-//		}
-//		transmitter.SendReliableMessage(rMsg, callback, priority)
-//		// TODO: if OK, set iMsg.state = sending; else set iMsg.state = waiting
-//
-//		// save signature for receipt
-//		iMsg.Set("signature", rMsg.Get("signature"))
-//
-//		messenger.SaveMessage(iMsg)
-//	}()
-//	return true
-//}
+import (
+	. "github.com/dimchat/core-go/protocol"
+	. "github.com/dimchat/dkd-go/protocol"
+	. "github.com/dimchat/mkm-go/protocol"
+	. "github.com/dimchat/mkm-go/types"
+	. "github.com/dimchat/sdk-go/sdk"
+	. "github.com/dimpart/demo-go/sdk/common/db"
+	. "github.com/dimpart/demo-go/sdk/utils"
+)
 
-//-------- IMessengerExtension
+type Transmitter interface {
+
+	/**
+	 *  Send content from sender to receiver with priority
+	 *
+	 * @param sender   - from where, null for current user
+	 * @param receiver - to where
+	 * @param content  - message content
+	 * @param priority - smaller is faster
+	 * @return (iMsg, None) on error
+	 */
+	SendContent(content Content, sender, receiver ID, priority int) Pair[InstantMessage, ReliableMessage]
+
+	/**
+	 *  Send instant message with priority
+	 *
+	 * @param iMsg     - plain message
+	 * @param priority - smaller is faster
+	 * @return null on error
+	 */
+	SendInstantMessage(iMsg InstantMessage, priority int) ReliableMessage
+
+	/**
+	 *  Send reliable message with priority
+	 *
+	 * @param rMsg     - encrypted &amp; signed message
+	 * @param priority - smaller is faster
+	 * @return false on error
+	 */
+	SendReliableMessage(rMsg ReliableMessage, priority int) bool
+}
+
+type MessageTransmitter struct {
+	//Transmitter
+	TwinsHelper
+}
+
+func (transmitter *MessageTransmitter) Init(facebook IFacebook, messenger IMessenger) Transmitter {
+	if transmitter.TwinsHelper.Init(facebook, messenger) != nil {
+	}
+	return transmitter
+}
+
+// protected
+func (transmitter *MessageTransmitter) Facebook() ICommonFacebook {
+	facebook := transmitter.TwinsHelper.GetFacebook()
+	if face, ok := facebook.(ICommonFacebook); ok {
+		return face
+	}
+	return nil
+}
+
+// protected
+func (transmitter *MessageTransmitter) Messenger() ICommonMessenger {
+	messenger := transmitter.TwinsHelper.GetMessenger()
+	if mess, ok := messenger.(ICommonMessenger); ok {
+		return mess
+	}
+	return nil
+}
+
+// Override
+func (transmitter *MessageTransmitter) SendContent(content Content, sender, receiver ID, priority int) Pair[InstantMessage, ReliableMessage] {
+	if sender == nil {
+		facebook := transmitter.Facebook()
+		current := facebook.GetCurrentUser()
+		sender = current.ID()
+	}
+	env := CreateEnvelope(sender, receiver, nil)
+	iMsg := CreateInstantMessage(env, content)
+	messenger := transmitter.Messenger()
+	rMsg := messenger.SendInstantMessage(iMsg, priority)
+	return NewPair[InstantMessage, ReliableMessage](iMsg, rMsg)
+}
+
+// private
+func (transmitter *MessageTransmitter) attachVisaTime(sender ID, iMsg InstantMessage) bool {
+	content := iMsg.Content()
+	if _, ok := content.(Command); ok {
+		// no need to attach times for command
+		return false
+	}
+	facebook := transmitter.Facebook()
+	doc := facebook.GetVisa(sender)
+	if doc == nil {
+		panic("failed to get visa document for sender: " + sender.String())
+		return false
+	}
+	// attach sender document time
+	lastDocTime := doc.Time()
+	if TimeIsNil(lastDocTime) {
+		//panic("document error")
+	} else {
+		iMsg.SetTime("SDT", lastDocTime)
+	}
+	return true
+}
+
+// Override
+func (transmitter *MessageTransmitter) SendInstantMessage(iMsg InstantMessage, priority int) ReliableMessage {
+	sender := iMsg.Sender()
+	//
+	//  0. check cycled message
+	//
+	if iMsg.Receiver().Equal(sender) {
+		//panic("drop cycled message")
+		return nil
+	}
+	// attach sender's document times
+	// for the receiver to check whether user info synchronized
+	transmitter.attachVisaTime(sender, iMsg)
+	//
+	//  1. encrypt message
+	//
+	messenger := transmitter.Messenger()
+	sMsg := messenger.EncryptMessage(iMsg)
+	if sMsg == nil {
+		panic("public key not found")
+		return nil
+	}
+	//
+	//  2. sign message
+	//
+	rMsg := messenger.SignMessage(sMsg)
+	if rMsg == nil {
+		// TODO: set msg.state = error
+		panic("failed to sign message")
+	}
+	//
+	//  3. send message
+	//
+	ok := messenger.SendReliableMessage(rMsg, priority)
+	if !ok {
+		// failed
+		return nil
+	}
+	return rMsg
+}
+
+// Override
+func (transmitter *MessageTransmitter) SendReliableMessage(rMsg ReliableMessage, priority int) bool {
+	sender := rMsg.Sender()
+	// 0. check cycled message
+	if rMsg.Receiver().Equal(sender) {
+		//panic("drop cycled message")
+		return false
+	}
+	// 1. serialize message
+	messenger := transmitter.Messenger()
+	data := messenger.SerializeMessage(rMsg)
+	if data == nil {
+		//panic("failed to serialize message")
+		return false
+	}
+	// 2. call gatekeeper to send the message data package
+	//    put message package into the waiting queue of current session
+	session := messenger.GetSession()
+	return session.QueueMessagePackage(rMsg, data, priority)
+}

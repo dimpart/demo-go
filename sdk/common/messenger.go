@@ -26,33 +26,33 @@
 package dimp
 
 import (
+	"fmt"
+
 	. "github.com/dimchat/dkd-go/protocol"
 	. "github.com/dimchat/mkm-go/crypto"
 	. "github.com/dimchat/mkm-go/protocol"
-	. "github.com/dimchat/sdk-go/dimp"
+	. "github.com/dimchat/mkm-go/types"
+	. "github.com/dimchat/sdk-go/core"
+	. "github.com/dimchat/sdk-go/crypto"
+	. "github.com/dimchat/sdk-go/sdk"
+	. "github.com/dimpart/demo-go/sdk/utils"
 )
-
-type IMessengerExtension interface {
-
-	/**
-	 *  Query meta from network with ID
-	 */
-	QueryMeta(identifier ID) bool
-
-	/**
-	 *  Query document from network with ID & type
-	 */
-	QueryDocument(identifier ID, docType string) bool
-
-	/**
-	 *  Query group info from members
-	 */
-	QueryGroupInfo(group ID, members []ID) bool
-}
 
 type ICommonMessenger interface {
 	IMessenger
-	IMessengerExtension
+	Transmitter
+
+	GetSession() Session
+
+	GetFacebook() ICommonFacebook
+
+	GetCipherKeyDelegate() CipherKeyDelegate
+
+	GetMessagePacker() Packer
+	SetMessagePacker(packer Packer)
+
+	GetMessageProcessor() Processor
+	SetMessageProcessor(processor Processor)
 }
 
 /**
@@ -60,59 +60,153 @@ type ICommonMessenger interface {
  *  ~~~~~~~~~~~~~~~~
  */
 type CommonMessenger struct {
+	//ICommonMessenger
 	Messenger
-	IMessengerExtension
 
-	//_transmitter ICommonTransmitter
+	// protected
+	Session     Session
+	Facebook    ICommonFacebook
+	Transmitter Transmitter
 }
 
-func (messenger *CommonMessenger) Init() *CommonMessenger {
-	if messenger.Messenger.Init() != nil {
+func (messenger *CommonMessenger) Init(session Session, facebook ICommonFacebook, database CipherKeyDelegate) ICommonMessenger {
+	if messenger.Messenger.Init(facebook) != nil {
+		messenger.Session = session
+		messenger.Facebook = facebook
+		//messenger.Transmitter = (&MessageTransmitter{}).Init(facebook, messenger)
+		messenger.Messenger.CipherKeyDelegate = database
+		messenger.Messenger.Packer = nil
+		messenger.Messenger.Processor = nil
 	}
 	return messenger
 }
 
-//func (messenger *CommonMessenger) SetTransmitter(transmitter ICommonTransmitter) {
-//	messenger._transmitter = transmitter
-//}
-//func (messenger *CommonMessenger) Transmitter() ICommonTransmitter {
-//	return messenger._transmitter
-//}
-
-//-------- IMessengerExtension
-
-func (messenger *CommonMessenger) QueryMeta(identifier ID) bool {
-	//return messenger.Transmitter().QueryMeta(identifier)
-	return false
+func (messenger *CommonMessenger) GetSession() Session {
+	return messenger.Session
 }
 
-func (messenger *CommonMessenger) QueryDocument(identifier ID, docType string) bool {
-	//return messenger.Transmitter().QueryDocument(identifier, docType)
-	return false
+func (messenger *CommonMessenger) GetFacebook() ICommonFacebook {
+	return messenger.Facebook
 }
 
-func (messenger *CommonMessenger) QueryGroupInfo(group ID, members []ID) bool {
-	//return messenger.Transmitter().QueryGroupInfo(group, members)
-	return false
+func (messenger *CommonMessenger) GetCipherKeyDelegate() CipherKeyDelegate {
+	return messenger.Messenger.CipherKeyDelegate
+}
+
+func (messenger *CommonMessenger) GetMessagePacker() Packer {
+	return messenger.Messenger.Packer
+}
+
+func (messenger *CommonMessenger) SetMessagePacker(packer Packer) {
+	messenger.Messenger.Packer = packer
+}
+
+func (messenger *CommonMessenger) GetMessageProcessor() Processor {
+	return messenger.Messenger.Processor
+}
+
+func (messenger *CommonMessenger) SetMessageProcessor(processor Processor) {
+	messenger.Messenger.Processor = processor
+}
+
+//-------- ITransceiver
+
+//// Override
+//func (messenger *CommonMessenger) SerializeMessage(rMsg ReliableMessage) []byte {
+//	// fix meta attachment
+//	// fix visa attachment
+//	return messenger.Messenger.SerializeMessage(rMsg)
+//}
+
+// Override
+func (messenger *CommonMessenger) DeserializeMessage(data []byte) ReliableMessage {
+	size := len(data)
+	if size <= 8 {
+		// message data error
+		return nil
+		//} else if data[0] != '{' || data[size-1] != '}' {
+		//	// only support JSON format now
+		//	return nil
+	}
+	rMsg := messenger.Messenger.DeserializeMessage(data)
+	if rMsg != nil {
+		// fix meta attachment
+		// fix visa attachment
+	}
+	return rMsg
 }
 
 //-------- IInstantMessageDelegate
 
-func (messenger *CommonMessenger) SerializeKey(password SymmetricKey, iMsg InstantMessage) []byte {
-	reused := password.Get("reused")
-	if reused != nil {
-		receiver := iMsg.Receiver()
-		if receiver.IsGroup() {
-			// reuse key for grouped message
-			return nil
+// Override
+func (messenger *CommonMessenger) EncryptKey(data []byte, receiver ID, iMsg InstantMessage) EncryptedBundle {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Failed to encrypt key: ", r)
 		}
-		// remove before serialize key
-		password.Set("reused", nil)
+	}()
+	return messenger.Messenger.EncryptKey(data, receiver, iMsg)
+}
+
+// Override
+func (messenger *CommonMessenger) EncodeKey(bundle EncryptedBundle, receiver ID, iMsg InstantMessage) StringKeyMap {
+	keys := messenger.Messenger.EncodeKey(bundle, receiver, iMsg)
+	if len(keys) > 0 {
+		// TODO: fixEncodeKeys
 	}
+	return keys
+}
+
+// Override
+func (messenger *CommonMessenger) SerializeKey(password SymmetricKey, iMsg InstantMessage) []byte {
+	// TODO: reuse message key
+
+	// 0. check message key
+	reused := password.Get("reused")
+	digest := password.Get("digest")
+	if reused == nil && digest == nil {
+		// flags not exists, serialize it directly
+		return messenger.Messenger.SerializeKey(password, iMsg)
+	}
+	// 1. remove before serializing key
+	password.Remove("reused")
+	password.Remove("digest")
+	// 2. serialize key without flags
 	data := messenger.Messenger.SerializeKey(password, iMsg)
-	if reused != nil {
-		// put it back
-		password.Set("reused", reused)
+	// 3. put it back after serialized
+	if ConvertBool(reused, false) {
+		password.Set("reused", true)
+	}
+	if digest != nil {
+		password.Set("digest", digest)
 	}
 	return data
+}
+
+//// Override
+//func (messenger *CommonMessenger) SerializeContent(content Content, password SymmetricKey, iMsg InstantMessage) []byte {
+//	// fix content
+//	return messenger.Messenger.SerializeContent(content, password, iMsg)
+//}
+
+//
+//  Interfaces for Transmitting Message
+//
+
+// Override
+func (messenger *CommonMessenger) SendContent(content Content, sender, receiver ID, priority int) Pair[InstantMessage, ReliableMessage] {
+	transmitter := messenger.Transmitter
+	return transmitter.SendContent(content, sender, receiver, priority)
+}
+
+// Override
+func (messenger *CommonMessenger) SendInstantMessage(iMsg InstantMessage, priority int) ReliableMessage {
+	transmitter := messenger.Transmitter
+	return transmitter.SendInstantMessage(iMsg, priority)
+}
+
+// Override
+func (messenger *CommonMessenger) SendReliableMessage(rMsg ReliableMessage, priority int) bool {
+	transmitter := messenger.Transmitter
+	return transmitter.SendReliableMessage(rMsg, priority)
 }

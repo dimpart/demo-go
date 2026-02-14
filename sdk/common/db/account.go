@@ -62,7 +62,7 @@ type ContactDBI interface {
 	/**
 	 *  Get contacts from DB
 	 */
-	LoadContacts() []ID
+	LoadContacts(user ID) []ID
 
 	SaveContacts(contacts []ID, user ID) bool
 }

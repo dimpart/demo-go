@@ -26,18 +26,18 @@
 package utils
 
 import (
-	. "github.com/dimchat/mkm-go/format"
 	"os"
 	"path"
+
+	. "github.com/dimchat/mkm-go/format"
 )
 
 func MakeDirs(dir string) bool {
 	err := os.MkdirAll(dir, os.ModePerm)
 	if err == nil {
 		return true
-	} else {
-		panic(err)
 	}
+	panic(err)
 }
 
 func PathJoin(elem ...string) string {
@@ -64,9 +64,8 @@ func ReadBinaryFile(path string) []byte {
 	data, err := os.ReadFile(path)
 	if err == nil {
 		return data
-	} else {
-		return nil
 	}
+	return nil
 }
 func WriteBinaryFile(path string, data []byte) bool {
 	err := os.WriteFile(path, data, 0644)
@@ -77,9 +76,8 @@ func AppendBinaryFile(path string, data []byte) bool {
 	if err == nil {
 		cnt, err := fd.Write(data)
 		return fd.Close() == nil && err == nil && cnt == len(data)
-	} else {
-		return false
 	}
+	return false
 }
 
 //
@@ -90,9 +88,8 @@ func ReadTextFile(path string) string {
 	data := ReadBinaryFile(path)
 	if data == nil {
 		return ""
-	} else {
-		return UTF8Decode(data)
 	}
+	return UTF8Decode(data)
 }
 func WriteTextFile(path string, text string) bool {
 	return WriteBinaryFile(path, UTF8Encode(text))
@@ -102,7 +99,7 @@ func AppendTextFile(path string, text string) bool {
 }
 
 //
-//  JsON File
+//  JSON File
 //
 
 func ReadJSONFile(path string) interface{} {

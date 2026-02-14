@@ -31,7 +31,6 @@
 package mkm
 
 import (
-	. "github.com/dimchat/mkm-go/crypto"
 	. "github.com/dimchat/mkm-go/ext"
 	. "github.com/dimchat/mkm-go/protocol"
 	. "github.com/dimchat/mkm-go/types"

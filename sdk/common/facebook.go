@@ -26,48 +26,35 @@
 package dimp
 
 import (
-	. "github.com/dimchat/core-go/mkm"
-	. "github.com/dimchat/demo-go/sdk/extensions"
+	. "github.com/dimchat/core-go/protocol"
 	. "github.com/dimchat/mkm-go/crypto"
 	. "github.com/dimchat/mkm-go/protocol"
 	. "github.com/dimchat/mkm-go/types"
-	. "github.com/dimchat/sdk-go/dimp"
+	. "github.com/dimchat/sdk-go/mkm"
+	. "github.com/dimchat/sdk-go/sdk"
+	. "github.com/dimpart/demo-go/sdk/common/db"
+	. "github.com/dimpart/demo-go/sdk/common/mkm"
+	. "github.com/dimpart/demo-go/sdk/extensions"
 )
-
-type IFacebookExtension interface {
-
-	SavePrivateKey(key PrivateKey, keyType string, user ID) bool
-
-	SetCurrentUser(user User)
-	AddUser(user User) bool
-	RemoveUser(user User) bool
-
-	AddContact(contact ID, user ID) bool
-	RemoveContact(contact ID, user ID) bool
-
-	AddMember(member ID, group ID) bool
-	RemoveMember(member ID, group ID) bool
-	ContainMember(member ID, group ID) bool
-	ContainAssistant(bot ID, group ID) bool
-	RemoveGroup(group ID) bool
-
-	GetName(entity ID) string
-
-	IsExpiredDocument(doc Document, reset bool) bool
-}
 
 type ICommonFacebook interface {
 	IFacebook
-	IFacebookExtension
 
-	DB() IFacebookDatabase
-	SetDB(db IFacebookDatabase)
+	//
+	//  Current User
+	//
+	GetCurrentUser() User
+	SetCurrentUser(user User)
+
+	//
+	//  Documents
+	//
+	GetDocument(did ID, docType string) Document
+	GetVisa(uid ID) Visa
+	GetBulletin(gid ID) Bulletin
+
+	GetName(did ID) string
 }
-
-const (
-	EXPIRES_KEY = "expires"
-	DOCUMENT_EXPIRES = 30 * 60
-)
 
 /**
  *  Common Facebook
@@ -75,194 +62,168 @@ const (
  *  Barrack for Server/Client
  */
 type CommonFacebook struct {
+	//ICommonFacebook
 	Facebook
-	IFacebookExtension
 
-	_db IFacebookDatabase
+	Database AccountDBI
 
-	_users []User
+	Checker IEntityChecker
+
+	currentUser User
 }
 
-func (facebook *CommonFacebook) Init() *CommonFacebook {
-	if facebook.Facebook.Init() != nil {
-		facebook._db = nil
-		facebook._users = nil
+//func (facebook *CommonFacebook) Init() ICommonFacebook {
+//	if facebook.Facebook.Init() != nil {
+//		facebook.Database = nil
+//		facebook.Checker = nil
+//		facebook.currentUser = nil
+//	}
+//	return facebook
+//}
+
+//
+//  Current User
+//
+
+func (facebook *CommonFacebook) GetCurrentUser() User {
+	currentUser := facebook.currentUser
+	if currentUser != nil {
+		return currentUser
 	}
-	return facebook
-}
-
-func (facebook *CommonFacebook) self() ICommonFacebook {
-	return facebook.Facebook.Source().(ICommonFacebook)
-}
-
-func (facebook *CommonFacebook) SetDB(db IFacebookDatabase) {
-	facebook._db = db
-}
-func (facebook *CommonFacebook) DB() IFacebookDatabase {
-	return facebook._db
-}
-
-//-------- EntityCreator
-
-func (facebook *CommonFacebook) isWaitingMeta(entity ID) bool {
-	if entity.IsBroadcast() {
-		return false
-	}
-	return facebook.self().GetMeta(entity) == nil
-}
-
-func (facebook *CommonFacebook) CreateUser(identifier ID) User {
-	if facebook.isWaitingMeta(identifier) {
+	users := facebook.Database.LoadLocalUsers()
+	if users == nil || len(users) == 0 {
 		return nil
 	}
-	return facebook.Facebook.CreateUser(identifier)
+	currentUser = facebook.GetUser(users[0])
+	facebook.currentUser = currentUser
+	return currentUser
 }
-
-func (facebook *CommonFacebook) CreateGroup(identifier ID) Group {
-	if facebook.isWaitingMeta(identifier) {
-		return nil
-	}
-	return facebook.Facebook.CreateGroup(identifier)
-}
-
-func (facebook *CommonFacebook) GetLocalUsers() []User {
-	if facebook._users == nil {
-		facebook._users = make([]User, 0, 1)
-		users := facebook.DB().AllUsers()
-		if users != nil {
-			self := facebook.self()
-			var usr User
-			for _, id := range users {
-				usr = self.GetUser(id)
-				if usr == nil {
-					panic(id)
-				} else {
-					facebook._users = append(facebook._users, usr)
-				}
-			}
-		}
-	}
-	return facebook._users
-}
-
-//-------- EntityManager
-
-func (facebook *CommonFacebook) SaveMeta(meta Meta, identifier ID) bool {
-	return facebook.DB().SaveMeta(meta, identifier)
-}
-
-func (facebook *CommonFacebook) SaveDocument(doc Document) bool {
-	if facebook.self().CheckDocument(doc) == false {
-		return false
-	}
-	doc.Set(EXPIRES_KEY, nil)
-	return facebook.DB().SaveDocument(doc)
-}
-
-func (facebook *CommonFacebook) SaveMembers(members []ID, group ID) bool {
-	return facebook.DB().SaveMembers(members, group)
-}
-
-
-//-------- IFacebookExtSource
-
-func (facebook *CommonFacebook) SavePrivateKey(key PrivateKey, keyType string, user ID) bool {
-	_, ok := key.(DecryptKey)
-	return facebook.DB().SavePrivateKey(user, key, keyType, true, ok)
-}
-
-//-------- Local Users
 
 func (facebook *CommonFacebook) SetCurrentUser(user User) {
-	facebook._users = nil
-	facebook.DB().SetCurrentUser(user.ID())
+	//if user.DataSource() == nil {
+	//	user.SetDataSource(facebook)
+	//}
+	facebook.currentUser = user
 }
 
-func (facebook *CommonFacebook) AddUser(user User) bool {
-	facebook._users = nil
-	return facebook.DB().AddUser(user.ID())
+// Override
+func (facebook *CommonFacebook) SelectUser(receiver ID) ID {
+	currentUser := facebook.GetCurrentUser()
+	if currentUser != nil {
+		current := currentUser.ID()
+		if receiver.IsBroadcast() {
+			// broadcast message can be decrypted by anyone, so
+			// just return current user here
+			return current
+		} else if receiver.Equal(current) {
+			return current
+		}
+	}
+	// check local users
+	return facebook.Facebook.SelectUser(receiver)
 }
 
-func (facebook *CommonFacebook) RemoveUser(user User) bool {
-	facebook._users = nil
-	return facebook.DB().RemoveUser(user.ID())
-}
-
-//-------- Contacts
-
-func (facebook *CommonFacebook) AddContact(contact ID, user ID) bool {
-	return facebook.DB().AddContact(contact, user)
-}
-
-func (facebook *CommonFacebook) RemoveContact(contact ID, user ID) bool {
-	return facebook.DB().RemoveContact(contact, user)
-}
-
-//-------- Relationship
-
-func (facebook *CommonFacebook) AddMember(member ID, group ID) bool {
-	return facebook.DB().AddMember(member, group)
-}
-func (facebook *CommonFacebook) RemoveMember(member ID, group ID) bool {
-	return facebook.DB().RemoveMember(member, group)
-}
-func (facebook *CommonFacebook) ContainMember(member ID, group ID) bool {
-	members := facebook.self().GetMembers(group)
-	if members != nil {
-		for _, item := range members {
-			if member.Equal(item) {
-				return true
+// Override
+func (facebook *CommonFacebook) SelectMember(members []ID) ID {
+	currentUser := facebook.GetCurrentUser()
+	if currentUser != nil {
+		// group message (recipient not designated)
+		current := currentUser.ID()
+		// the messenger will check group info before decrypting message,
+		// so we can trust that the group's meta & members MUST exist here.
+		for _, member := range members {
+			if member.Equal(current) {
+				return current
 			}
 		}
 	}
-	owner := facebook.self().GetOwner(group)
-	return owner != nil && owner.Equal(members)
+	// check local users
+	return facebook.Facebook.SelectMember(members)
 }
-func (facebook *CommonFacebook) ContainAssistant(bot ID, group ID) bool {
-	assistants := facebook.self().GetAssistants(group)
-	if assistants != nil {
-		for _, item := range assistants {
-			if bot.Equal(item) {
-				return true
-			}
-		}
+
+//
+//  Documents
+//
+
+func (facebook *CommonFacebook) GetDocument(did ID, docType string) Document {
+	documents := facebook.GetDocuments(did)
+	doc := GetLastDocument(documents, docType)
+	// compatible for document type
+	if doc == nil && docType == VISA {
+		doc = GetLastDocument(documents, PROFILE)
 	}
-	return false
-}
-func (facebook *CommonFacebook) RemoveGroup(group ID) bool {
-	return facebook.DB().RemoveGroup(group)
+	return doc
 }
 
-//-------- profiles
+func (facebook *CommonFacebook) GetVisa(uid ID) Visa {
+	documents := facebook.GetDocuments(uid)
+	return GetLastVisa(documents)
+}
 
-func (facebook *CommonFacebook) GetName(entity ID) string {
+func (facebook *CommonFacebook) GetBulletin(gid ID) Bulletin {
+	documents := facebook.GetDocuments(gid)
+	return GetLastBulletin(documents)
+}
+
+func (facebook *CommonFacebook) GetName(did ID) string {
+	var docType string
+	if did.IsUser() {
+		docType = VISA
+	} else if did.IsGroup() {
+		docType = BULLETIN
+	} else {
+		docType = "*"
+	}
 	// get name from document
-	doc := facebook.self().GetDocument(entity, "*")
+	doc := facebook.GetDocument(did, docType)
 	if doc != nil {
-		name := doc.Name()
+		name := ConvertString(doc.GetProperty("name"), "")
 		if name != "" {
 			return name
 		}
 	}
-	// get name fro ID
-	return AnonymousGetName(entity)
+	// get name from ID
+	return AnonymousGetName(did)
 }
 
-func (facebook *CommonFacebook) IsExpiredDocument(doc Document, reset bool) bool {
-	now := Timestamp(TimeNow())
-	expires := doc.Get(EXPIRES_KEY)
-	if expires == nil {
-		// set expired time
-		doc.Set(EXPIRES_KEY, now + DOCUMENT_EXPIRES)
-		return false
-	}
-	if now > int64(expires.(float64)) {
-		if reset {
-			// update expired time
-			doc.Set(EXPIRES_KEY, now + DOCUMENT_EXPIRES)
-		}
-		return true
-	} else {
-		return false
-	}
+//
+//  Entity DataSource
+//
+
+// Override
+func (facebook *CommonFacebook) GetMeta(did ID) Meta {
+	meta := facebook.Database.LoadMeta(did)
+	facebook.Checker.CheckMeta(did, meta)
+	return meta
+}
+
+// Override
+func (facebook *CommonFacebook) GetDocuments(did ID) []Document {
+	docs := facebook.Database.LoadDocuments(did)
+	facebook.Checker.CheckDocuments(did, docs)
+	return docs
+}
+
+//
+//  User DataSource
+//
+
+// Override
+func (facebook *CommonFacebook) GetContacts(user ID) []ID {
+	return facebook.Database.LoadContacts(user)
+}
+
+// Override
+func (facebook *CommonFacebook) GetPrivateKeysForDecryption(user ID) []DecryptKey {
+	return facebook.Database.GetPrivateKeysForDecryption(user)
+}
+
+// Override
+func (facebook *CommonFacebook) GetPrivateKeyForSignature(user ID) SignKey {
+	return facebook.Database.GetPrivateKeyForSignature(user)
+}
+
+// Override
+func (facebook *CommonFacebook) GetPrivateKeyForVisaSignature(user ID) SignKey {
+	return facebook.Database.GetPrivateKeyForVisaSignature(user)
 }

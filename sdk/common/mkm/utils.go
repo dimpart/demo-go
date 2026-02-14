@@ -38,6 +38,7 @@ import (
 	. "github.com/dimchat/mkm-go/format"
 	. "github.com/dimchat/mkm-go/protocol"
 	. "github.com/dimchat/mkm-go/types"
+	. "github.com/dimpart/demo-go/sdk/utils"
 )
 
 //
@@ -111,7 +112,7 @@ func DocumentTimeIsBefore(oldTime, thisTime Time) bool {
 	if TimeIsNil(oldTime) || TimeIsNil(thisTime) {
 		return false
 	}
-	return TimeToInt64(thisTime) < TimeToInt64(oldTime)
+	return TimeIsBefore(oldTime, thisTime)
 }
 
 /**

@@ -31,10 +31,9 @@ import . "github.com/dimchat/mkm-go/types"
  *  Notification object with name, sender and extra info
  */
 type Notification interface {
-
 	Name() string
 	Sender() interface{}
-	Info() map[string]interface{}
+	Info() StringKeyMap
 }
 
 /**
@@ -50,26 +49,23 @@ type NotificationObserver interface {
 	OnNotificationReceived(notify Notification)
 }
 
-//
-//  Implementations
-//
+// Implementations
 type BaseNotification struct {
-	
-	_name string
+	_name   string
 	_sender interface{}
-	_info map[string]interface{}
+	_info   StringKeyMap
 }
 
-func NewNotification(name string, sender interface{}, info map[string]interface{}) *BaseNotification {
+func NewNotification(name string, sender interface{}, info StringKeyMap) *BaseNotification {
 	if ValueIsNil(info) {
-		info = make(map[string]interface{})
+		info = NewMap()
 	}
 	notification := new(BaseNotification)
 	notification.Init(name, sender, info)
 	return notification
 }
 
-func (notify *BaseNotification) Init(name string, sender interface{}, info map[string]interface{}) *BaseNotification {
+func (notify *BaseNotification) Init(name string, sender interface{}, info StringKeyMap) *BaseNotification {
 	notify._name = name
 	notify._sender = sender
 	notify._info = info
@@ -84,7 +80,7 @@ func (notify *BaseNotification) Sender() interface{} {
 	return notify._sender
 }
 
-func (notify *BaseNotification) Info() map[string]interface{} {
+func (notify *BaseNotification) Info() StringKeyMap {
 	return notify._info
 }
 
@@ -92,7 +88,6 @@ func (notify *BaseNotification) Info() map[string]interface{} {
  *  Notification dispatcher
  */
 type NotificationCenter struct {
-
 	_observers map[string][]NotificationObserver
 }
 
@@ -134,7 +129,7 @@ func (center *NotificationCenter) Remove(observer NotificationObserver, name str
 	}
 }
 
-// Remove observer from notification center, no mather what names
+// Remove observer from notification center, no matter what names
 func (center *NotificationCenter) RemoveAll(observer NotificationObserver) {
 	count := len(center._observers)
 	names := make([]string, 0, count)
@@ -177,9 +172,7 @@ func remove(list []NotificationObserver, item NotificationObserver) []Notificati
 	return out
 }
 
-//
-//  Default notification center
-//
+// Default notification center
 var defaultCenter = new(NotificationCenter).Init()
 
 // Add observer with notification name
@@ -197,13 +190,13 @@ func NotificationRemoveObserver(observer NotificationObserver, name string) {
 }
 
 // Post a notification (with name, sender and extra info)
-func NotificationPost(name string, sender interface{}, info map[string]interface{}) Notification {
+func NotificationPost(name string, sender interface{}, info StringKeyMap) Notification {
 	observers := defaultCenter.getObservers(name)
 	if observers == nil {
 		return nil
 	}
 	notify := NewNotification(name, sender, info)
-	for _, item := range observers{
+	for _, item := range observers {
 		item.OnNotificationReceived(notify)
 	}
 	return notify

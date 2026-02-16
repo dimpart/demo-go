@@ -1,6 +1,6 @@
 /* license: https://mit-license.org
  *
- *  DIM-SDK : Decentralized Instant Messaging Software Development Kit
+ *  DIMP : Decentralized Instant Messaging Protocol
  *
  *                                Written in 2021 by Moky <albert.moky@gmail.com>
  *
@@ -32,7 +32,6 @@ package dkd
 
 import (
 	. "github.com/dimchat/core-go/dkd"
-	. "github.com/dimchat/mkm-go/types"
 	. "github.com/dimpart/demo-go/sdk/common/protocol"
 )
 

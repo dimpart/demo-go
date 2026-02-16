@@ -1,4 +1,9 @@
 /* license: https://mit-license.org
+ *
+ *  DIMP : Decentralized Instant Messaging Protocol
+ *
+ *                                Written in 2021 by Moky <albert.moky@gmail.com>
+ *
  * ==============================================================================
  * The MIT License (MIT)
  *
@@ -27,7 +32,6 @@ package dkd
 
 import (
 	. "github.com/dimchat/core-go/dkd"
-	. "github.com/dimchat/mkm-go/types"
 	. "github.com/dimpart/demo-go/sdk/common/protocol"
 )
 

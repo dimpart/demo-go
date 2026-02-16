@@ -31,7 +31,6 @@ import (
 	. "github.com/dimchat/mkm-go/protocol"
 	. "github.com/dimchat/mkm-go/types"
 	. "github.com/dimchat/sdk-go/sdk"
-	. "github.com/dimpart/demo-go/sdk/common/db"
 	. "github.com/dimpart/demo-go/sdk/utils"
 )
 

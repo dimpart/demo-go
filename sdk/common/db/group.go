@@ -83,7 +83,7 @@ type GroupHistoryDBI interface {
 	 * @param group - group ID
 	 * @return history list
 	 */
-	LoadGroupHistories(group ID) []*Pair[GroupCommand, ReliableMessage]
+	LoadGroupHistories(group ID) []Pair[GroupCommand, ReliableMessage]
 
 	/**
 	 *  Load last 'reset' group command
@@ -91,7 +91,7 @@ type GroupHistoryDBI interface {
 	 * @param group - group ID
 	 * @return reset command message
 	 */
-	LoadResetCommandMessage(group ID) *Pair[ResetCommand, ReliableMessage]
+	LoadResetCommandMessage(group ID) Pair[ResetCommand, ReliableMessage]
 
 	/**
 	 *  Clean group commands for members:

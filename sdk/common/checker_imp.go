@@ -141,7 +141,7 @@ func (checker *EntityChecker) NeedsQueryDocuments(did ID, documents []Document) 
 	if did.IsBroadcast() {
 		// broadcast entity has no document to query
 		return false
-	} else if documents == nil || len(documents) == 0 {
+	} else if len(documents) == 0 {
 		// documents not found, sure to query
 		return true
 	}
@@ -150,7 +150,7 @@ func (checker *EntityChecker) NeedsQueryDocuments(did ID, documents []Document) 
 }
 
 func (checker *EntityChecker) GetLastDocumentTime(did ID, documents []Document) Time {
-	if documents == nil || len(documents) == 0 {
+	if len(documents) == 0 {
 		return nil
 	}
 	var lastTime Time
@@ -188,7 +188,7 @@ func (checker *EntityChecker) NeedsQueryMembers(group ID, members []ID) bool {
 	if group.IsBroadcast() {
 		// broadcast group has no members to query
 		return false
-	} else if members == nil || len(members) == 0 {
+	} else if len(members) == 0 {
 		// members not found, sure to query
 		return true
 	}
@@ -198,14 +198,14 @@ func (checker *EntityChecker) NeedsQueryMembers(group ID, members []ID) bool {
 
 func (checker *EntityChecker) GetLastGroupHistoryTime(group ID) Time {
 	array := checker.database.LoadGroupHistories(group)
-	if array == nil || len(array) == 0 {
+	if len(array) == 0 {
 		return nil
 	}
 	var lastTime Time
 	var hisTime Time
 	var his GroupCommand
 	for _, pair := range array {
-		his = pair.First
+		his = pair.First()
 		if his == nil {
 			//panic("group command error")
 			continue

@@ -36,6 +36,7 @@ import (
 	. "github.com/dimchat/core-go/protocol"
 	. "github.com/dimchat/mkm-go/mkm"
 	. "github.com/dimchat/mkm-go/protocol"
+	. "github.com/dimchat/mkm-go/types"
 	. "github.com/dimchat/sdk-go/crypto"
 	. "github.com/dimchat/sdk-go/mkm"
 )
@@ -141,9 +142,7 @@ func (server *BaseStation) Host() string {
 		doc := server.Profile()
 		if doc != nil {
 			host := doc.GetProperty("host")
-			if host != nil {
-				server._host = host.(string)
-			}
+			server._host = ConvertString(host, "")
 		}
 		if server._host == "" {
 			server._host = "0.0.0.0"
@@ -158,9 +157,7 @@ func (server *BaseStation) Port() uint16 {
 		doc := server.Profile()
 		if doc != nil {
 			port := doc.GetProperty("port")
-			if port != nil {
-				server._port = uint16(port.(float64))
-			}
+			server._port = ConvertUInt16(port, 0)
 		}
 		if server._port == 0 {
 			server._port = 9394

@@ -26,24 +26,26 @@
 package db
 
 import (
-	. "github.com/dimchat/demo-go/sdk/utils"
-	. "github.com/dimchat/mkm-go/protocol"
 	"strings"
+
+	. "github.com/dimchat/mkm-go/protocol"
+	. "github.com/dimpart/demo-go/sdk/utils"
 )
 
 //-------- ContactTable
 
-func (db *Storage) GetContacts(user ID) []ID {
-	arr := db._contacts[user]
+// Override
+func (db *Storage) LoadContacts(user ID) []ID {
+	arr := db._contactTable[user.String()]
 	if arr == nil {
 		arr = loadContacts(db, user)
-		db._contacts[user] = arr
+		db._contactTable[user.String()] = arr
 	}
 	return arr
 }
 
 func (db *Storage) AddContact(contact ID, user ID) bool {
-	arr := db.GetContacts(user)
+	arr := db.LoadContacts(user)
 	for _, item := range arr {
 		if contact.Equal(item) {
 			// duplicated
@@ -55,7 +57,7 @@ func (db *Storage) AddContact(contact ID, user ID) bool {
 }
 
 func (db *Storage) RemoveContact(contact ID, user ID) bool {
-	arr := db.GetContacts(user)
+	arr := db.LoadContacts(user)
 	var pos = -1
 	for index, id := range arr {
 		if contact.Equal(id) {
@@ -66,14 +68,14 @@ func (db *Storage) RemoveContact(contact ID, user ID) bool {
 	if pos == -1 {
 		// contact ID not found
 		return false
-	} else {
-		arr = append(arr[:pos], arr[pos+1:]...)
-		return db.SaveContacts(arr, user)
 	}
+	arr = append(arr[:pos], arr[pos+1:]...)
+	return db.SaveContacts(arr, user)
 }
 
+// Override
 func (db *Storage) SaveContacts(contacts []ID, user ID) bool {
-	db._contacts[user] = contacts
+	db._contactTable[user.String()] = contacts
 	return saveContacts(db, user, contacts)
 }
 
@@ -95,7 +97,7 @@ func loadContacts(db *Storage, user ID) []ID {
 	lines := strings.Split(text, "\n")
 	contacts := make([]ID, 0, len(lines))
 	for _, rec := range lines {
-		id := IDParse(rec)
+		id := ParseID(rec)
 		if id != nil {
 			contacts = append(contacts, id)
 		}

@@ -100,6 +100,11 @@ func MetaMatchPublicKey(pKey VerifyKey, meta Meta) bool {
 //  Document Utils
 //
 
+func GetDocumentID(doc Document) ID {
+	helper := GetGeneralAccountHelper()
+	return helper.GetDocumentID(doc.Map())
+}
+
 func GetDocumentType(doc Document) string {
 	helper := GetGeneralAccountHelper()
 	return helper.GetDocumentType(doc.Map(), "")

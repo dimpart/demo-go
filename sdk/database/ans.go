@@ -26,39 +26,44 @@
 package db
 
 import (
-	. "github.com/dimchat/demo-go/sdk/utils"
+	"strings"
+
+	. "github.com/dimchat/mkm-go/mkm"
 	. "github.com/dimchat/mkm-go/protocol"
 	. "github.com/dimchat/mkm-go/types"
-	"strings"
+	. "github.com/dimpart/demo-go/sdk/utils"
 )
 
 //-------- AddressNameTable
 
+// Override
 func (db *Storage) GetIdentifier(alias string) ID {
-	return db._ans[alias]
+	return db._ansTable[alias]
 }
 
+// Override
 func (db *Storage) AddRecord(identifier ID, alias string) bool {
 	if len(alias) == 0 || ValueIsNil(identifier) {
 		return false
 	}
-	if len(db._ans) == 0 {
+	if len(db._ansTable) == 0 {
 		panic("ANS not initialized")
 	}
 	// cache it
-	db._ans[alias] = identifier
+	db._ansTable[alias] = identifier
 	// save them
-	return saveANS(db, db._ans)
+	return saveANS(db, db._ansTable)
 }
 
+// Override
 func (db *Storage) RemoveRecord(alias string) bool {
-	if len(alias) == 0 || db._ans[alias] == nil {
+	if len(alias) == 0 || db._ansTable[alias] == nil {
 		return false
 	}
 	// remove it
-	delete(db._ans, alias)
+	delete(db._ansTable, alias)
 	// save them
-	return saveANS(db, db._ans)
+	return saveANS(db, db._ansTable)
 }
 
 /**
@@ -89,7 +94,7 @@ func loadANS(db *Storage) map[string]ID {
 			db.error("Invalid ANS record: " + rec)
 			continue
 		}
-		table[strings.TrimSpace(pair[0])] = IDParse(strings.TrimSpace(pair[1]))
+		table[strings.TrimSpace(pair[0])] = ParseID(strings.TrimSpace(pair[1]))
 	}
 	//
 	//  Reserved names

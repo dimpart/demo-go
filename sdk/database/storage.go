@@ -27,28 +27,29 @@ package db
 
 import (
 	"fmt"
-	. "github.com/dimchat/demo-go/sdk/common/db"
-	. "github.com/dimchat/demo-go/sdk/extensions"
-	. "github.com/dimchat/demo-go/sdk/utils"
+
 	. "github.com/dimchat/dkd-go/protocol"
 	. "github.com/dimchat/mkm-go/crypto"
 	. "github.com/dimchat/mkm-go/protocol"
-	. "github.com/dimchat/sdk-go/dimp/protocol"
-	. "github.com/dimchat/sdk-go/plugins/crypto"
+	. "github.com/dimchat/mkm-go/types"
+	. "github.com/dimchat/plugins-go/crypto"
+	. "github.com/dimpart/demo-go/sdk/common/db"
+	. "github.com/dimpart/demo-go/sdk/common/protocol"
+	. "github.com/dimpart/demo-go/sdk/extensions"
+	. "github.com/dimpart/demo-go/sdk/utils"
 )
 
 type Database interface {
+	PrivateKeyDBI
+	MetaDBI
+	DocumentDBI
 
-	PrivateKeyTable
-	MetaTable
-	DocumentTable
+	AddressNameDBI
+	LoginDBI
 
-	AddressNameTable
-	LoginTable
-
-	UserTable
-	ContactTable
-	GroupTable
+	UserDBI
+	ContactDBI
+	GroupDBI
 
 	// root directory for database
 	SetRoot(root string)
@@ -59,7 +60,7 @@ type Database interface {
  *  ~~~~~~~~~~~~~
  */
 type Storage struct {
-	Database
+	//Database
 
 	_root string
 
@@ -69,59 +70,54 @@ type Storage struct {
 	//  memory caches
 	//
 
-	_identityKeys map[ID]PrivateKey         // meta keys: ID -> SK
-	_communicationKeys map[ID][]PrivateKey  // visa keys: ID -> []SK
-	_decryptionKeys map[ID][]DecryptKey     // visa keys: ID -> []SK
+	_identityKeyTable      map[string]PrivateKey   // meta keys: ID -> SK
+	_communicationKeyTable map[string][]PrivateKey // visa keys: ID -> []SK
+	_decryptionKeyTable    map[string][]DecryptKey // visa keys: ID -> []SK
 
-	_metas map[ID]Meta                // meta: ID -> meta
+	_metaTable     map[string]Meta       // meta: ID -> meta
+	_documentTable map[string][]Document // document: type -> ID -> doc
 
-	_docs map[string]map[ID]Document  // document: type -> ID -> doc
+	_ansTable map[string]ID // ANS: string -> ID
 
-	_ans map[string]ID                // ANS: string -> ID
+	_loginCommandTable map[string]LoginCommand    // ID -> Login Command
+	_loginMessageTable map[string]ReliableMessage // ID -> Login Message
 
-	_loginCommands map[ID]LoginCommand     // ID -> Login Command
-	_loginMessages map[ID]ReliableMessage  // ID -> Login Message
+	_users        []ID
+	_contactTable map[string][]ID // user contacts: ID -> []ID
 
-	_users []ID
-	_contacts map[ID][]ID             // user contacts: ID -> []ID
-
-	_members map[ID][]ID              // group members: ID -> []ID
+	_memberTable map[string][]ID // group members: ID -> []ID
 }
 
-func (db *Storage) Init() *Storage {
+func (db *Storage) Init() Database {
 
 	db._root = "/tmp/.dim"
 
-	db._password = GetPlainKey()
+	db._password = NewPlainKey()
 
 	// private keys
-	db._identityKeys = make(map[ID]PrivateKey)
-	db._communicationKeys = make(map[ID][]PrivateKey)
-	db._decryptionKeys = make(map[ID][]DecryptKey)
+	db._identityKeyTable = make(map[string]PrivateKey, 8)
+	db._communicationKeyTable = make(map[string][]PrivateKey, 8)
+	db._decryptionKeyTable = make(map[string][]DecryptKey, 8)
 
 	// meta
-	db._metas = make(map[ID]Meta)
+	db._metaTable = make(map[string]Meta, 1024)
 
 	// documents
-	docs := make(map[string]map[ID]Document)
-	docs[VISA] = make(map[ID]Document)
-	docs[PROFILE] = make(map[ID]Document)
-	docs[BULLETIN] = make(map[ID]Document)
-	db._docs = docs
+	db._documentTable = make(map[string][]Document, 1024)
 
 	// ANS
-	db._ans = loadANS(db)  // make(map[string]ID)
+	db._ansTable = loadANS(db) // make(map[string]ID)
 
 	// login info
-	db._loginCommands = make(map[ID]LoginCommand)
-	db._loginMessages = make(map[ID]ReliableMessage)
+	db._loginCommandTable = make(map[string]LoginCommand, 1024)
+	db._loginMessageTable = make(map[string]ReliableMessage, 1024)
 
 	// local users
 	db._users = make([]ID, 0, 1)
-	db._contacts = make(map[ID][]ID)
+	db._contactTable = make(map[string][]ID, 1)
 
 	// group info
-	db._members = make(map[ID][]ID)
+	db._memberTable = make(map[string][]ID, 1024)
 
 	return db
 }
@@ -158,10 +154,10 @@ func (db *Storage) SetRoot(root string) {
 func (db *Storage) mkmDir(identifier ID) string {
 	address := identifier.Address().String()
 	pos := len(address)
-	z := address[pos-1:pos]
-	y := address[pos-2:pos-1]
-	x := address[pos-3:pos-2]
-	w := address[pos-4:pos-3]
+	z := address[pos-1 : pos]
+	y := address[pos-2 : pos-1]
+	x := address[pos-3 : pos-2]
+	w := address[pos-4 : pos-3]
 	return PathJoin(db.Root(), "mkm", z, y, x, w, address)
 }
 
@@ -184,43 +180,62 @@ func (db *Storage) prepareDir(filepath string) bool {
 func (db *Storage) readText(path string) string {
 	return ReadTextFile(path)
 }
-func (db *Storage) readMap(path string) map[string]interface{} {
+func (db *Storage) readMap(path string) StringKeyMap {
 	info := ReadJSONFile(path)
 	if info == nil {
 		return nil
-	} else {
-		return info.(map[string]interface{})
 	}
+	dict, ok := info.(StringKeyMap)
+	if !ok {
+		return nil
+	}
+	return dict
+}
+func (db *Storage) readList(path string) []StringKeyMap {
+	info := ReadJSONFile(path)
+	if info == nil {
+		return nil
+	}
+	array, ok := info.([]StringKeyMap)
+	if !ok {
+		return nil
+	}
+	return array
 }
 func (db *Storage) readSecret(path string) []byte {
 	data := ReadBinaryFile(path)
 	if data == nil {
 		return nil
-	} else {
-		return db._password.Decrypt(data)
 	}
+	password := db._password
+	return password.Decrypt(data, password.Map())
 }
 
 func (db *Storage) writeText(path string, text string) bool {
-	if db.prepareDir(path) {
-		return WriteTextFile(path, text)
-	} else {
+	if !db.prepareDir(path) {
 		panic(path)
 	}
+	return WriteTextFile(path, text)
 }
-func (db *Storage) writeMap(path string, container interface{}) bool {
-	if db.prepareDir(path) {
-		return WriteJSONFile(path, container)
-	} else {
+func (db *Storage) writeMap(path string, container StringKeyMap) bool {
+	if !db.prepareDir(path) {
 		panic(path)
 	}
+	return WriteJSONFile(path, container)
+}
+func (db *Storage) writeList(path string, container []StringKeyMap) bool {
+	if !db.prepareDir(path) {
+		panic(path)
+	}
+	return WriteJSONFile(path, container)
 }
 func (db *Storage) writeSecret(path string, data []byte) bool {
-	if db.prepareDir(path) {
-		return WriteBinaryFile(path, db._password.Encrypt(data))
-	} else {
+	if !db.prepareDir(path) {
 		panic(path)
 	}
+	password := db._password
+	binary := password.Encrypt(data, password.Map())
+	return WriteBinaryFile(path, binary)
 }
 
 //
@@ -247,9 +262,7 @@ func (db *Storage) error(msg string) {
 	LogError(msg)
 }
 
-//
-//  Singleton
-//
+// Singleton
 var sharedDatabase Database
 
 func SharedDatabase() Database {
@@ -257,5 +270,6 @@ func SharedDatabase() Database {
 }
 
 func init() {
-	sharedDatabase = new(Storage).Init()
+	db := &Storage{}
+	sharedDatabase = db.Init()
 }

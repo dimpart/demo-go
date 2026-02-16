@@ -29,8 +29,15 @@ import . "github.com/dimchat/mkm-go/protocol"
 
 //-------- UserTable
 
-func (db *Storage) AllUsers() []ID {
+// Override
+func (db *Storage) LoadLocalUsers() []ID {
 	return db._users
+}
+
+// Override
+func (db *Storage) SaveLocalUsers(users []ID) bool {
+	db._users = users
+	return true
 }
 
 func (db *Storage) AddUser(user ID) bool {
@@ -57,10 +64,9 @@ func (db *Storage) RemoveUser(user ID) bool {
 	if pos == -1 {
 		// user ID not found
 		return false
-	} else {
-		db._users = append(db._users[:pos], db._users[pos+1:]...)
-		return true
 	}
+	db._users = append(db._users[:pos], db._users[pos+1:]...)
+	return true
 }
 
 func (db *Storage) SetCurrentUser(user ID) {
@@ -69,9 +75,8 @@ func (db *Storage) SetCurrentUser(user ID) {
 }
 
 func (db *Storage) GetCurrentUser() ID {
-	if len(db._users) > 0 {
-		return db._users[0]
-	} else {
+	if len(db._users) == 0 {
 		return nil
 	}
+	return db._users[0]
 }

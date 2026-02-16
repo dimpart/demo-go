@@ -26,22 +26,42 @@
 package db
 
 import (
-	. "github.com/dimchat/demo-go/sdk/utils"
+	. "github.com/dimchat/core-go/mkm"
 	. "github.com/dimchat/mkm-go/protocol"
+	. "github.com/dimpart/demo-go/sdk/common/mkm"
+	. "github.com/dimpart/demo-go/sdk/utils"
 )
 
 //-------- MetaTable
 
+// Override
 func (db *Storage) SaveMeta(meta Meta, entity ID) bool {
-	if cacheMeta(db, meta, entity) {
-		return saveMeta(db, meta, entity)
-	} else {
+	// 1. verify meta with ID
+	if !MetaMatchID(entity, meta) {
 		return false
 	}
+	// 2. cache it
+	db._metaTable[entity.String()] = meta
+	// 3. save into local storage
+	return saveMeta(db, meta, entity)
 }
 
-func (db *Storage) GetMeta(entity ID) Meta {
-	return getMeta(db, entity)
+// Override
+func (db *Storage) LoadMeta(entity ID) Meta {
+	// 1. try from memory cache
+	meta := db._metaTable[entity.String()]
+	if meta == nil {
+		// 2. try from local storage
+		meta = loadMeta(db, entity)
+		if meta == nil {
+			db._metaTable[entity.String()] = emptyMeta // placeholder
+		} else {
+			db._metaTable[entity.String()] = meta
+		}
+	} else if meta == emptyMeta {
+		meta = nil
+	}
+	return meta
 }
 
 /**
@@ -51,52 +71,22 @@ func (db *Storage) GetMeta(entity ID) Meta {
  *  file path: '.dim/mkm/{zzz}/{ADDRESS}/meta.js'
  */
 
-func metaPath(db *Storage, identifier ID) string {
-	return PathJoin(db.mkmDir(identifier), "meta.js")
+func metaPath(db *Storage, did ID) string {
+	return PathJoin(db.mkmDir(did), "meta.js")
 }
 
-func loadMeta(db *Storage, identifier ID) Meta {
-	path := metaPath(db, identifier)
+func loadMeta(db *Storage, did ID) Meta {
+	path := metaPath(db, did)
 	db.log("Loading meta: " + path)
-	return MetaParse(db.readMap(path))
+	return ParseMeta(db.readMap(path))
 }
 
-func saveMeta(db *Storage, meta Meta, identifier ID) bool {
+func saveMeta(db *Storage, meta Meta, did ID) bool {
 	info := meta.Map()
-	path := metaPath(db, identifier)
+	path := metaPath(db, did)
 	db.log("Saving meta: " + path)
 	return db.writeMap(path, info)
 }
 
 // place holder
-var emptyMeta = MetaGenerate(MKM, emptyPrivateKey, "empty")
-
-func getMeta(db *Storage, identifier ID) Meta {
-	// 1. try from memory cache
-	meta := db._metas[identifier]
-	if meta == nil {
-		// 2. try from local storage
-		meta = loadMeta(db, identifier)
-		if meta == nil {
-			// place an empty meta for cache
-			db._metas[identifier] = emptyMeta
-		} else {
-			// cache it
-			db._metas[identifier] = meta
-		}
-	} else if meta == emptyMeta {
-		meta = nil
-	}
-	return meta
-}
-
-func cacheMeta(db *Storage, meta Meta, identifier ID) bool {
-	// 1. verify meta with ID
-	if MetaMatchID(meta, identifier) {
-		// 2. cache it
-		db._metas[identifier] = meta
-		return true
-	} else {
-		return false
-	}
-}
+var emptyMeta Meta = &BaseMeta{}

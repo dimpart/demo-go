@@ -26,75 +26,52 @@
 package db
 
 import (
-	. "github.com/dimchat/demo-go/sdk/utils"
-	. "github.com/dimchat/mkm-go/protocol"
 	"strings"
+
+	. "github.com/dimchat/mkm-go/protocol"
+	. "github.com/dimpart/demo-go/sdk/utils"
 )
 
 //-------- GroupTable
 
-func (db *Storage) GetFounder(group ID) ID {
+// Override
+func (db *Storage) LoadFounder(group ID) ID {
 	// TODO: get group founder
 	return nil
 }
 
-func (db *Storage) GetOwner(group ID) ID {
+// Override
+func (db *Storage) LoadOwner(group ID) ID {
 	// TODO: get group owner
 	return nil
 }
 
-func (db *Storage) GetMembers(group ID) []ID {
-	arr := db._members[group]
+// Override
+func (db *Storage) LoadAdministrators(group ID) []ID {
+	// TODO: get administrators
+	return nil
+}
+
+// Override
+func (db *Storage) SaveAdministrators(admins []ID, group ID) bool {
+	// TODO: save administrators
+	return true
+}
+
+// Override
+func (db *Storage) LoadMembers(group ID) []ID {
+	arr := db._memberTable[group.String()]
 	if arr == nil {
 		arr = loadMembers(db, group)
-		db._members[group] = arr
+		db._memberTable[group.String()] = arr
 	}
 	return arr
 }
 
-func (db *Storage) GetAssistants(group ID) []ID {
-	// TODO: get group assistants
-	return nil
-}
-
-func (db *Storage) AddMember(member ID, group ID) bool {
-	arr := db.GetMembers(group)
-	for _, item := range arr {
-		if member.Equal(item) {
-			// duplicated
-			return false
-		}
-	}
-	arr = append(arr, member)
-	return db.SaveMembers(arr, group)
-}
-
-func (db *Storage) RemoveMember(member ID, group ID) bool {
-	arr := db.GetMembers(group)
-	var pos = -1
-	for index, id := range arr {
-		if member.Equal(id) {
-			pos = index
-			break
-		}
-	}
-	if pos == -1 {
-		// contact ID not found
-		return false
-	} else {
-		arr = append(arr[:pos], arr[pos+1:]...)
-		return db.SaveMembers(arr, group)
-	}
-}
-
+// Override
 func (db *Storage) SaveMembers(members []ID, group ID) bool {
-	db._members[group] = members
+	db._memberTable[group.String()] = members
 	return saveMembers(db, group, members)
-}
-
-func (db *Storage) RemoveGroup(group ID) bool {
-	// TODO: remove group info
-	return false
 }
 
 /**
@@ -115,7 +92,7 @@ func loadMembers(db *Storage, group ID) []ID {
 	lines := strings.Split(text, "\n")
 	members := make([]ID, 0, len(lines))
 	for _, rec := range lines {
-		id := IDParse(rec)
+		id := ParseID(rec)
 		if id != nil {
 			members = append(members, id)
 		}

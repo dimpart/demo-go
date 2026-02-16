@@ -26,31 +26,28 @@
 package db
 
 import (
-	. "github.com/dimchat/demo-go/sdk/utils"
-	. "github.com/dimchat/dkd-go/dkd"
+	. "github.com/dimchat/core-go/msg"
 	. "github.com/dimchat/dkd-go/protocol"
 	. "github.com/dimchat/mkm-go/protocol"
-	. "github.com/dimchat/sdk-go/dimp/protocol"
+	. "github.com/dimchat/mkm-go/types"
+	. "github.com/dimpart/demo-go/sdk/common/protocol"
+	. "github.com/dimpart/demo-go/sdk/utils"
 )
 
 //-------- LoginTable
 
-func (db *Storage) GetLoginCommand(user ID) LoginCommand {
-	cmd, _ := getLoginInfo(db, user)
-	return cmd
+// Override
+func (db *Storage) LoadLoginCommandMessage(user ID) Pair[LoginCommand, ReliableMessage] {
+	cmd, msg := getLoginInfo(db, user)
+	return NewPair[LoginCommand, ReliableMessage](cmd, msg)
 }
 
-func (db *Storage) GetLoginMessage(user ID) ReliableMessage {
-	_, msg := getLoginInfo(db, user)
-	return msg
-}
-
-func (db *Storage) SaveLoginCommandMessage(cmd LoginCommand, msg ReliableMessage) bool {
-	if cacheLoginInfo(db, cmd, msg) {
-		return saveLoginInfo(db, cmd, msg)
-	} else {
+// Override
+func (db *Storage) SaveLoginCommandMessage(user ID, cmd LoginCommand, msg ReliableMessage) bool {
+	if !cacheLoginInfo(db, user, cmd, msg) {
 		return false
 	}
+	return saveLoginInfo(db, user, cmd, msg)
 }
 
 /**
@@ -71,55 +68,53 @@ func loadLoginInfo(db *Storage, identifier ID) (cmd LoginCommand, msg ReliableMe
 	if info == nil {
 		return nil, nil
 	}
-	cmd, _ = ContentParse(info["cmd"]).(LoginCommand)
-	msg = ReliableMessageParse(info["msg"])
+	cmd, _ = ParseContent(info["cmd"]).(LoginCommand)
+	msg = ParseReliableMessage(info["msg"])
 	return cmd, msg
 }
 
-func saveLoginInfo(db *Storage, cmd LoginCommand, msg ReliableMessage) bool {
-	info := make(map[string]interface{})
+func saveLoginInfo(db *Storage, user ID, cmd LoginCommand, msg ReliableMessage) bool {
+	info := NewMap()
 	info["cmd"] = cmd.Map()
 	info["msg"] = msg.Map()
-	identifier := cmd.ID()
-	path := loginInfoPath(db, identifier)
+	path := loginInfoPath(db, user)
 	db.log("Saving login info: " + path)
 	return db.writeMap(path, info)
 }
 
 // place holder
-var emptyMessage = NewReliableMessage(nil)
+var emptyMessage = &NetworkMessage{}
 
-func getLoginInfo(db *Storage, identifier ID) (cmd LoginCommand, msg ReliableMessage) {
+func getLoginInfo(db *Storage, user ID) (cmd LoginCommand, msg ReliableMessage) {
 	// 1. try from memory cache
-	msg = db._loginMessages[identifier]
+	msg = db._loginMessageTable[user.String()]
 	if msg == nil {
 		// 2. try from local storage
-		cmd, msg = loadLoginInfo(db, identifier)
+		cmd, msg = loadLoginInfo(db, user)
 		if msg == nil {
 			// place an empty message for cache
-			db._loginMessages[identifier] = emptyMessage
+			db._loginMessageTable[user.String()] = emptyMessage
 		} else {
 			// cache them
-			db._loginCommands[identifier] = cmd
-			db._loginMessages[identifier] = msg
+			db._loginCommandTable[user.String()] = cmd
+			db._loginMessageTable[user.String()] = msg
 		}
 	} else if msg == emptyMessage {
 		cmd = nil
 		msg = nil
 	} else {
-		cmd = db._loginCommands[identifier]
+		cmd = db._loginCommandTable[user.String()]
 	}
 	return cmd, msg
 }
 
-func cacheLoginInfo(db *Storage, cmd LoginCommand, msg ReliableMessage) bool {
+func cacheLoginInfo(db *Storage, user ID, cmd LoginCommand, msg ReliableMessage) bool {
 	// 1. verify sender ID
-	identifier := cmd.ID()
-	if msg.Sender().Equal(identifier) == false {
+	if msg.Sender().Equal(user) == false {
 		return false
 	}
 	// 2. check last login time
-	old, _ := getLoginInfo(db, identifier)
+	old, _ := getLoginInfo(db, user)
 	if old != nil {
 		oldTime := old.Time().Unix()
 		newTime := cmd.Time().Unix()
@@ -129,7 +124,7 @@ func cacheLoginInfo(db *Storage, cmd LoginCommand, msg ReliableMessage) bool {
 		}
 	}
 	// 3. cache them
-	db._loginCommands[identifier] = cmd
-	db._loginMessages[identifier] = msg
+	db._loginCommandTable[user.String()] = cmd
+	db._loginMessageTable[user.String()] = msg
 	return true
 }

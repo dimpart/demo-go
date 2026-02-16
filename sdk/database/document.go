@@ -26,114 +26,65 @@
 package db
 
 import (
-	. "github.com/dimchat/demo-go/sdk/utils"
+	. "github.com/dimchat/core-go/mkm"
 	. "github.com/dimchat/mkm-go/protocol"
+	. "github.com/dimpart/demo-go/sdk/common/mkm"
+	. "github.com/dimpart/demo-go/sdk/utils"
 )
 
 //-------- DocumentTable
 
-func (db *Storage) SaveDocument(doc Document) bool {
-	if cacheDocument(db, doc) {
-		return saveDocument(db, doc)
-	} else {
+// Override
+func (db *Storage) SaveDocument(doc Document, entity ID) bool {
+	// 1. check valid
+	if !doc.IsValid() {
 		return false
 	}
+	// TODO: check old documents
+	array := make([]Document, 1)
+	array[0] = doc
+	// 2. cache it
+	db._documentTable[entity.String()] = array
+	// 3. save into local storage
+	return saveDocuments(db, entity, array)
 }
 
-func (db *Storage) GetDocument(entity ID, docType string) Document {
-	docType = documentType(docType, entity)
-	return getDocument(db, entity, docType)
+// Override
+func (db *Storage) LoadDocuments(entity ID) []Document {
+	// 1. try from memory cache
+	docs := db._documentTable[entity.String()]
+	if docs == nil {
+		// 2. try from local storage
+		docs = loadDocuments(db, entity)
+		if docs == nil {
+			docs = []Document{} // placeholder
+		}
+		db._documentTable[entity.String()] = docs
+	}
+	return docs
 }
 
 /**
  *  Document for Entities (User/Group)
  *  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *
- *  file path: '.dim/mkm/{zzz}/{ADDRESS}/doc_{type}.js'
+ *  file path: '.dim/mkm/{zzz}/{ADDRESS}/documents.js'
  */
 
-func documentPath(db *Storage, identifier ID, docType string) string {
-	return PathJoin(db.mkmDir(identifier), documentFile(docType))
-}
-func documentFile(docType string) string {
-	if docType == VISA {
-		return "visa.js"
-	} else {
-		// TODO: other types?
-		return "doc.js"
-	}
-}
-func documentType(docType string, identifier ID) string {
-	if docType != "" && docType != "*" {
-		return docType
-	} else if identifier.IsUser() {
-		return VISA
-	} else if identifier.IsGroup() {
-		return BULLETIN
-	} else {
-		return PROFILE
-	}
+func documentPath(db *Storage, did ID) string {
+	return PathJoin(db.mkmDir(did), "documents.js")
 }
 
-func loadDocument(db *Storage, identifier ID, docType string) Document {
-	path := documentPath(db, identifier, docType)
+func loadDocuments(db *Storage, did ID) []Document {
+	path := documentPath(db, did)
 	db.log("Loading document: " + path)
-	return DocumentParse(db.readMap(path))
+	array := db.readList(path)
+	return DocumentConvert(array)
 }
 
-func saveDocument(db *Storage, doc Document) bool {
-	info := doc.Map()
-	path := documentPath(db, doc.ID(), doc.Type())
+func saveDocuments(db *Storage, did ID, docs []Document) bool {
+	path := documentPath(db, did)
 	db.log("Saving document: " + path)
-	return db.writeMap(path, info)
-}
-
-// place holder
-var emptyProfile = DocumentCreate(PROFILE, ANYONE, "", "")
-
-func getDocument(db *Storage, identifier ID, docType string) Document {
-	// 1. try from memory cache
-	var doc Document
-	table := db._docs[docType]
-	if table == nil {
-		// FIXME: document type not support?
-		table = make(map[ID]Document)
-		db._docs[docType] = table
-		doc = nil
-	} else {
-		doc = table[identifier]
-	}
-	if doc == nil {
-		// 2. try from local storage
-		doc = loadDocument(db, identifier, docType)
-		if doc == nil {
-			// place an empty doc for cache
-			table[identifier] = emptyProfile
-		} else {
-			// cache it
-			table[identifier] = doc
-		}
-	} else if doc == emptyProfile {
-		doc = nil
-	}
-	return doc
-}
-
-func cacheDocument(db *Storage, doc Document) bool {
-	// 1. check valid
-	if doc.IsValid() == false {
-		return false
-	}
-	// 2. prepare table with document type
-	identifier := doc.ID()
-	docType := documentType(doc.Type(), identifier)
-	table := db._docs[docType]
-	if table == nil {
-		// FIXME: document type not support?
-		table = make(map[ID]Document)
-		db._docs[docType] = table
-	}
-	// 3. cache it
-	table[identifier] = doc
-	return true
+	array := DocumentRevert(docs)
+	return db.writeList(path, array)
 }

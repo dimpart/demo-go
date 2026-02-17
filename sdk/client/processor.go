@@ -27,36 +27,55 @@ package dimp
 
 import (
 	. "github.com/dimchat/core-go/protocol"
-	. "github.com/dimchat/demo-go/sdk/common"
-	. "github.com/dimchat/demo-go/sdk/utils"
 	. "github.com/dimchat/dkd-go/protocol"
 	. "github.com/dimchat/mkm-go/protocol"
-	. "github.com/dimchat/sdk-go/dimp/protocol"
+	. "github.com/dimpart/demo-go/sdk/common"
+	. "github.com/dimpart/demo-go/sdk/common/protocol"
+	. "github.com/dimpart/demo-go/sdk/utils"
 )
 
-type ClientProcessor struct {
-	CommonProcessor
+type ClientMessageProcessor struct {
+	CommonMessageProcessor
 }
 
-func (processor *ClientProcessor) ProcessContent(content Content, rMsg ReliableMessage) []Content {
-	responses := processor.CommonProcessor.ProcessContent(content, rMsg)
-	if responses == nil || len(responses) == 0 {
+// Override
+func (processor *ClientMessageProcessor) GetMessenger() ICommonMessenger {
+	messenger := processor.CommonMessageProcessor.GetMessenger()
+	cm, ok := messenger.(ICommonMessenger)
+	if ok {
+		return cm
+	}
+	return nil
+}
+
+func (processor *ClientMessageProcessor) checkGroupTimes(content Content, rMsg ReliableMessage) {
+	// TODO: check 'GDT' & 'GHT' in rMsg
+}
+
+func (processor *ClientMessageProcessor) ProcessContent(content Content, rMsg ReliableMessage) []Content {
+	responses := processor.CommonMessageProcessor.ProcessContent(content, rMsg)
+
+	// check group document & history times from the message
+	// to make sure the group info synchronized
+	processor.checkGroupTimes(content, rMsg)
+
+	if len(responses) == 0 {
 		// respond nothing
 		return nil
-	}
-	if _, ok := responses[0].(HandshakeCommand); ok {
+	} else if _, ok := responses[0].(HandshakeCommand); ok {
 		// urgent command
 		return responses
 	}
-
-	// check receiver
+	messenger := processor.GetMessenger()
+	if messenger == nil {
+		panic("messenger not ready")
+	}
 	receiver := rMsg.Receiver()
-	user := processor.Facebook().SelectLocalUser(receiver)
+	user := processor.SelectLocalUser(receiver)
 	if user == nil {
 		panic(receiver)
 	}
 	sender := rMsg.Sender()
-	//messenger := processor.Messenger()
 	// check responses
 	for _, res := range responses {
 		if res == nil {
@@ -76,7 +95,7 @@ func (processor *ClientProcessor) ProcessContent(content Content, rMsg ReliableM
 			}
 		}
 		// normal response
-		//messenger.SendContent()
+		messenger.SendContent(res, user.ID(), sender, 1)
 	}
 	// DON'T respond to station directly
 	return nil

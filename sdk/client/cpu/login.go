@@ -26,29 +26,48 @@
 package cpu
 
 import (
-	. "github.com/dimchat/core-go/protocol"
-	. "github.com/dimchat/demo-go/sdk/common/db"
 	. "github.com/dimchat/dkd-go/protocol"
-	. "github.com/dimchat/sdk-go/dimp/cpu"
-	. "github.com/dimchat/sdk-go/dimp/protocol"
+	. "github.com/dimchat/sdk-go/cpu"
+	. "github.com/dimpart/demo-go/sdk/client"
+	. "github.com/dimpart/demo-go/sdk/common/db"
+	. "github.com/dimpart/demo-go/sdk/common/protocol"
 )
 
 type LoginCommandProcessor struct {
 	BaseCommandProcessor
 }
 
-func (cpu *LoginCommandProcessor) Execute(cmd Command, msg ReliableMessage) Content {
-	loginCmd, _ := cmd.(LoginCommand)
-
-	// update contact's login status
-	sharedLoginTable.SaveLoginCommandMessage(loginCmd, msg)
-
-	// no need to response login command
+// Override
+func (cpu *LoginCommandProcessor) GetMessenger() IClientMessenger {
+	messenger := cpu.BaseCommandProcessor.GetMessenger()
+	cm, ok := messenger.(IClientMessenger)
+	if ok {
+		return cm
+	}
 	return nil
 }
 
-var sharedLoginTable LoginTable
+// private
+func (cpu *LoginCommandProcessor) getDatabase() SessionDBI {
+	messenger := cpu.GetMessenger()
+	session := messenger.GetSession()
+	return session.GetDatabase()
+}
 
-func LoginCommandProcessorSetTable(table LoginTable)  {
-	sharedLoginTable = table
+// Override
+func (cpu *LoginCommandProcessor) ProcessContent(content Content, rMsg ReliableMessage) []Content {
+	command, ok := content.(LoginCommand)
+	if !ok {
+		return nil
+	}
+	sender := command.ID()
+	// save login command to session db
+	db := cpu.getDatabase()
+	if db.SaveLoginCommandMessage(sender, command, rMsg) {
+		// OK
+	} else {
+		panic("failed to save login command")
+	}
+	// no need to response login command
+	return nil
 }

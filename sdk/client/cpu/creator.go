@@ -27,9 +27,11 @@ package cpu
 
 import (
 	. "github.com/dimchat/core-go/protocol"
-	. "github.com/dimchat/demo-go/sdk/common/cpu"
 	. "github.com/dimchat/dkd-go/protocol"
-	. "github.com/dimchat/sdk-go/dimp"
+	. "github.com/dimchat/sdk-go/cpu"
+	. "github.com/dimchat/sdk-go/dkd"
+	. "github.com/dimchat/sdk-go/sdk"
+	. "github.com/dimpart/demo-go/sdk/common/protocol"
 )
 
 /**
@@ -38,27 +40,70 @@ import (
  *
  *  Delegate for CPU factory
  */
-type ClientProcessorCreator struct {
-	CommonProcessorCreator
+type ClientContentProcessorCreator struct {
+	BaseContentProcessorCreator
 }
 
 //-------- IProcessorCreator
 
-func (factory *ClientProcessorCreator) CreateContentProcessor(msgType ContentType) ContentProcessor {
-	// text
-
-	// others
-	return factory.CommonProcessorCreator.CreateContentProcessor(msgType)
-}
-
-func (factory *ClientProcessorCreator) CreateCommandProcessor(msgType ContentType, cmdName string) ContentProcessor {
-	// handshake
-	if cmdName == HANDSHAKE {
-		return NewHandshakeCommandProcessor(factory.Facebook(), factory.Messenger())
+func (creator *ClientContentProcessorCreator) CreateContentProcessor(msgType MessageType) ContentProcessor {
+	switch msgType {
+	// application customized
+	case "application", "customized":
+		return NewCustomizedContentProcessor(creator.Facebook, creator.Messenger)
+	// forward content
+	case "forward":
+		return NewForwardContentProcessor(creator.Facebook, creator.Messenger)
+	// array content
+	case "array":
+		return NewArrayContentProcessor(creator.Facebook, creator.Messenger)
+	// default commands
+	case "command":
+		return NewBaseCommandProcessor(creator.Facebook, creator.Messenger)
+	//// history command
+	//case "history":
+	//	return NewHistoryCommandProcessor(creator.Facebook, creator.Messenger)
+	// default contents
+	case "*":
+		// must return a default processor for unknown type
+		return NewBaseContentProcessor(creator.Facebook, creator.Messenger)
 	}
 
-	// login
-
 	// others
-	return factory.CommonProcessorCreator.CreateCommandProcessor(msgType, cmdName)
+	return creator.BaseContentProcessorCreator.CreateContentProcessor(msgType)
+}
+
+func (creator *ClientContentProcessorCreator) CreateCommandProcessor(msgType MessageType, cmdName string) ContentProcessor {
+	switch cmdName {
+	case RECEIPT:
+		return NewReceiptCommandProcessor(creator.Facebook, creator.Messenger)
+	case HANDSHAKE:
+		return NewHandshakeCommandProcessor(creator.Facebook, creator.Messenger)
+	case LOGIN:
+		return NewLoginCommandProcessor(creator.Facebook, creator.Messenger)
+	}
+	// others
+	return creator.BaseContentProcessorCreator.CreateCommandProcessor(msgType, cmdName)
+}
+
+//
+//  Factories
+//
+
+func NewReceiptCommandProcessor(facebook IFacebook, messenger IMessenger) ContentProcessor {
+	cpu := &ReceiptCommandProcessor{}
+	cpu.Init(facebook, messenger)
+	return cpu
+}
+
+func NewHandshakeCommandProcessor(facebook IFacebook, messenger IMessenger) ContentProcessor {
+	cpu := &HandshakeCommandProcessor{}
+	cpu.Init(facebook, messenger)
+	return cpu
+}
+
+func NewLoginCommandProcessor(facebook IFacebook, messenger IMessenger) ContentProcessor {
+	cpu := &LoginCommandProcessor{}
+	cpu.Init(facebook, messenger)
+	return cpu
 }

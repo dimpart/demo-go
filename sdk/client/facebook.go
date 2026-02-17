@@ -25,41 +25,19 @@
  */
 package dimp
 
-import (
-	. "github.com/dimchat/demo-go/sdk/common"
-	. "github.com/dimchat/demo-go/sdk/database"
-)
+import . "github.com/dimpart/demo-go/sdk/common"
 
 type IClientFacebook interface {
 	ICommonFacebook
 }
 
+/**
+ *  Client Facebook with Address Name Service
+ */
 type ClientFacebook struct {
 	CommonFacebook
 }
 
-func (facebook *ClientFacebook) Init() *ClientFacebook {
-	if facebook.CommonFacebook.Init() != nil {
-	}
-	return facebook
-}
-
-//func (facebook *ClientFacebook) self() ICommonFacebook {
-//	return facebook.Facebook.Self().(ICommonFacebook)
-//}
-
 //
-//  Singleton
+//  GroupDataSource
 //
-var sharedFacebook *ClientFacebook
-
-func SharedFacebook() IClientFacebook {
-	return sharedFacebook
-}
-
-func init() {
-	sharedFacebook = new(ClientFacebook)
-	sharedFacebook.Init()
-	sharedFacebook.SetSource(sharedFacebook)
-	sharedFacebook.SetDB(SharedDatabase())
-}

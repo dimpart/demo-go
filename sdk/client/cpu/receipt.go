@@ -28,22 +28,15 @@ package cpu
 import (
 	. "github.com/dimchat/core-go/protocol"
 	. "github.com/dimchat/dkd-go/protocol"
-	. "github.com/dimchat/sdk-go/dimp"
-	. "github.com/dimchat/sdk-go/dimp/cpu"
+	. "github.com/dimchat/sdk-go/cpu"
 )
 
 type ReceiptCommandProcessor struct {
 	BaseCommandProcessor
 }
 
-func NewReceiptCommandProcessor(facebook IFacebook, messenger IMessenger) *ReceiptCommandProcessor {
-	cpu := new(ReceiptCommandProcessor)
-	cpu.Init(facebook, messenger)
-	return cpu
-}
-
-func (cpu *ReceiptCommandProcessor) Execute(cmd Command, _ ReliableMessage) []Content {
-	//rCmd, _ := cmd.(*ReceiptCommand)
+// Override
+func (cpu *ReceiptCommandProcessor) ProcessContent(content Content, rMsg ReliableMessage) []Content {
 	// no need to response receipt command
 	return nil
 }

@@ -75,6 +75,8 @@ type Station interface {
 	 *  Station Port
 	 */
 	Port() uint16
+
+	SetID(sid ID)
 }
 
 func NewStation(did ID) Station {

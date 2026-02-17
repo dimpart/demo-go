@@ -26,73 +26,59 @@
 package dimp
 
 import (
-	. "github.com/dimchat/core-go/dimp"
-	. "github.com/dimchat/demo-go/sdk/client/cpu"
-	. "github.com/dimchat/demo-go/sdk/common"
-	. "github.com/dimchat/sdk-go/dimp"
-	. "github.com/dimchat/sdk-go/dimp/cpu"
+	. "github.com/dimchat/mkm-go/protocol"
+	. "github.com/dimchat/sdk-go/core"
+	. "github.com/dimpart/demo-go/sdk/client/network"
+	. "github.com/dimpart/demo-go/sdk/common"
 )
-
-func createKeyCache() CipherKeyDelegate {
-	cache := new(KeyCache)
-	cache.Init()
-	return cache
-}
-func createProcessor(facebook IClientFacebook, messenger IClientMessenger) Processor {
-	// CPU creator
-	creator := new(ClientProcessorCreator)
-	creator.Init(facebook, messenger)
-	// CPU factory
-	factory := new(CPFactory)
-	factory.Init(facebook, messenger)
-	factory.SetCreator(creator)
-	// message processor
-	processor := new(ClientProcessor)
-	processor.Init(facebook, messenger)
-	processor.SetFactory(factory)
-	return processor
-}
-func createPacker(facebook IClientFacebook, messenger IClientMessenger) Packer {
-	packer := new(CommonPacker)
-	packer.Init(facebook, messenger)
-	return packer
-}
-//func createTransmitter(messenger IClientMessenger) ICommonTransmitter {
-//	return new(CommonTransmitter).Init(messenger)
-//}
 
 type IClientMessenger interface {
 	ICommonMessenger
+
+	GetClientSession() IClientSession
+
+	/**
+	 *  Send handshake command to current station
+	 *
+	 * @param sessionKey - respond session key
+	 */
+	Handshake(sessionKey string)
+
+	/**
+	 *  Callback for handshake success
+	 */
+	HandshakeSuccess()
+
+	/**
+	 *  Broadcast meta &amp; visa document to all stations
+	 */
+	BroadcastDocuments(updated bool)
+
+	/**
+	 *  Send login command to keep roaming
+	 */
+	BroadcastLogin(sender ID, userAgent string)
+
+	/**
+	 *  Send report command to keep user online
+	 */
+	ReportOnline(sender ID)
+
+	/**
+	 *  Send report command to let user offline
+	 */
+	ReportOffline(sender ID)
 }
 
+/**
+ *  Client Messenger for Handshake &amp; Broadcast Report
+ */
 type ClientMessenger struct {
 	CommonMessenger
 }
 
-func (messenger *ClientMessenger) Init(facebook IClientFacebook) *ClientMessenger {
-	if messenger.CommonMessenger.Init() != nil {
-		// initialize delegates for Transceiver
-		messenger.SetCipherKeyDelegate(createKeyCache())
-		messenger.SetEntityDelegate(facebook)
-		messenger.SetPacker(createPacker(facebook, messenger))
-		messenger.SetProcessor(createProcessor(facebook, messenger))
-		//messenger.SetTransformer(createTransformer(messenger))
-		// initialize delegates for Messenger
-		//messenger.SetTransmitter(createTransmitter(messenger))
+func (messenger *ClientMessenger) Init(session Session, facebook ICommonFacebook, database CipherKeyDelegate) *ClientMessenger {
+	if messenger.CommonMessenger.Init(session, facebook, database) != nil {
 	}
 	return messenger
-}
-
-//
-//  Singleton
-//
-var sharedMessenger *ClientMessenger
-
-func SharedMessenger() IClientMessenger {
-	return sharedMessenger
-}
-
-func init() {
-	sharedMessenger = new(ClientMessenger)
-	sharedMessenger.Init(SharedFacebook())
 }

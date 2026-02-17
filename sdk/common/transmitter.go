@@ -71,7 +71,7 @@ type MessageTransmitter struct {
 	TwinsHelper
 }
 
-func (transmitter *MessageTransmitter) Init(facebook IFacebook, messenger IMessenger) Transmitter {
+func (transmitter *MessageTransmitter) Init(facebook Facebook, messenger Messenger) Transmitter {
 	if transmitter.TwinsHelper.Init(facebook, messenger) != nil {
 	}
 	return transmitter

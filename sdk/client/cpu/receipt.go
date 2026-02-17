@@ -26,7 +26,6 @@
 package cpu
 
 import (
-	. "github.com/dimchat/core-go/protocol"
 	. "github.com/dimchat/dkd-go/protocol"
 	. "github.com/dimchat/sdk-go/cpu"
 )

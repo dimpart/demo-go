@@ -39,7 +39,7 @@ import (
 )
 
 type ICommonMessenger interface {
-	IMessenger
+	Messenger
 	Transmitter
 
 	GetSession() Session
@@ -61,7 +61,7 @@ type ICommonMessenger interface {
  */
 type CommonMessenger struct {
 	//ICommonMessenger
-	Messenger
+	BaseMessenger
 
 	// protected
 	Session     Session
@@ -70,13 +70,10 @@ type CommonMessenger struct {
 }
 
 func (messenger *CommonMessenger) Init(session Session, facebook ICommonFacebook, database CipherKeyDelegate) ICommonMessenger {
-	if messenger.Messenger.Init(facebook) != nil {
+	if messenger.BaseMessenger.Init(facebook, database) != nil {
 		messenger.Session = session
 		messenger.Facebook = facebook
 		//messenger.Transmitter = (&MessageTransmitter{}).Init(facebook, messenger)
-		messenger.Messenger.CipherKeyDelegate = database
-		messenger.Messenger.Packer = nil
-		messenger.Messenger.Processor = nil
 	}
 	return messenger
 }
@@ -90,23 +87,23 @@ func (messenger *CommonMessenger) GetFacebook() ICommonFacebook {
 }
 
 func (messenger *CommonMessenger) GetCipherKeyDelegate() CipherKeyDelegate {
-	return messenger.Messenger.CipherKeyDelegate
+	return messenger.CipherKeyDelegate
 }
 
 func (messenger *CommonMessenger) GetMessagePacker() Packer {
-	return messenger.Messenger.Packer
+	return messenger.Packer
 }
 
 func (messenger *CommonMessenger) SetMessagePacker(packer Packer) {
-	messenger.Messenger.Packer = packer
+	messenger.Packer = packer
 }
 
 func (messenger *CommonMessenger) GetMessageProcessor() Processor {
-	return messenger.Messenger.Processor
+	return messenger.Processor
 }
 
 func (messenger *CommonMessenger) SetMessageProcessor(processor Processor) {
-	messenger.Messenger.Processor = processor
+	messenger.Processor = processor
 }
 
 //-------- ITransceiver
@@ -115,7 +112,7 @@ func (messenger *CommonMessenger) SetMessageProcessor(processor Processor) {
 //func (messenger *CommonMessenger) SerializeMessage(rMsg ReliableMessage) []byte {
 //	// fix meta attachment
 //	// fix visa attachment
-//	return messenger.Messenger.SerializeMessage(rMsg)
+//	return messenger.BaseMessenger.SerializeMessage(rMsg)
 //}
 
 // Override
@@ -128,7 +125,7 @@ func (messenger *CommonMessenger) DeserializeMessage(data []byte) ReliableMessag
 		//	// only support JSON format now
 		//	return nil
 	}
-	rMsg := messenger.Messenger.DeserializeMessage(data)
+	rMsg := messenger.BaseMessenger.DeserializeMessage(data)
 	if rMsg != nil {
 		// fix meta attachment
 		// fix visa attachment
@@ -145,12 +142,12 @@ func (messenger *CommonMessenger) EncryptKey(data []byte, receiver ID, iMsg Inst
 			fmt.Println("Failed to encrypt key: ", r)
 		}
 	}()
-	return messenger.Messenger.EncryptKey(data, receiver, iMsg)
+	return messenger.BaseMessenger.EncryptKey(data, receiver, iMsg)
 }
 
 // Override
 func (messenger *CommonMessenger) EncodeKey(bundle EncryptedBundle, receiver ID, iMsg InstantMessage) StringKeyMap {
-	keys := messenger.Messenger.EncodeKey(bundle, receiver, iMsg)
+	keys := messenger.BaseMessenger.EncodeKey(bundle, receiver, iMsg)
 	if len(keys) > 0 {
 		// TODO: fixEncodeKeys
 	}
@@ -166,13 +163,13 @@ func (messenger *CommonMessenger) SerializeKey(password SymmetricKey, iMsg Insta
 	digest := password.Get("digest")
 	if reused == nil && digest == nil {
 		// flags not exists, serialize it directly
-		return messenger.Messenger.SerializeKey(password, iMsg)
+		return messenger.BaseMessenger.SerializeKey(password, iMsg)
 	}
 	// 1. remove before serializing key
 	password.Remove("reused")
 	password.Remove("digest")
 	// 2. serialize key without flags
-	data := messenger.Messenger.SerializeKey(password, iMsg)
+	data := messenger.BaseMessenger.SerializeKey(password, iMsg)
 	// 3. put it back after serialized
 	if ConvertBool(reused, false) {
 		password.Set("reused", true)
@@ -186,7 +183,7 @@ func (messenger *CommonMessenger) SerializeKey(password SymmetricKey, iMsg Insta
 //// Override
 //func (messenger *CommonMessenger) SerializeContent(content Content, password SymmetricKey, iMsg InstantMessage) []byte {
 //	// fix content
-//	return messenger.Messenger.SerializeContent(content, password, iMsg)
+//	return messenger.BaseMessenger.SerializeContent(content, password, iMsg)
 //}
 
 //

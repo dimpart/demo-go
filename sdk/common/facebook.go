@@ -38,7 +38,7 @@ import (
 )
 
 type ICommonFacebook interface {
-	IFacebook
+	Facebook
 
 	GetDatabase() AccountDBI
 	GetEntityChecker() IEntityChecker
@@ -66,7 +66,7 @@ type ICommonFacebook interface {
  */
 type CommonFacebook struct {
 	//ICommonFacebook
-	Facebook
+	BaseFacebook
 
 	Database AccountDBI
 
@@ -75,14 +75,14 @@ type CommonFacebook struct {
 	currentUser User
 }
 
-//func (facebook *CommonFacebook) Init() ICommonFacebook {
-//	if facebook.Facebook.Init() != nil {
-//		facebook.Database = nil
-//		facebook.Checker = nil
-//		facebook.currentUser = nil
-//	}
-//	return facebook
-//}
+func (facebook *CommonFacebook) Init(ds EntityDataSource) ICommonFacebook {
+	if facebook.BaseFacebook.Init(ds) != nil {
+		facebook.Database = nil
+		facebook.Checker = nil
+		facebook.currentUser = nil
+	}
+	return facebook
+}
 
 func (facebook *CommonFacebook) GetDatabase() AccountDBI {
 	return facebook.Database
@@ -131,7 +131,7 @@ func (facebook *CommonFacebook) SelectUser(receiver ID) ID {
 		}
 	}
 	// check local users
-	return facebook.Facebook.SelectUser(receiver)
+	return facebook.BaseFacebook.SelectUser(receiver)
 }
 
 // Override
@@ -149,7 +149,7 @@ func (facebook *CommonFacebook) SelectMember(members []ID) ID {
 		}
 	}
 	// check local users
-	return facebook.Facebook.SelectMember(members)
+	return facebook.BaseFacebook.SelectMember(members)
 }
 
 //

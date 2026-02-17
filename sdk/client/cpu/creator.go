@@ -90,19 +90,19 @@ func (creator *ClientContentProcessorCreator) CreateCommandProcessor(msgType Mes
 //  Factories
 //
 
-func NewReceiptCommandProcessor(facebook IFacebook, messenger IMessenger) ContentProcessor {
+func NewReceiptCommandProcessor(facebook Facebook, messenger Messenger) ContentProcessor {
 	cpu := &ReceiptCommandProcessor{}
 	cpu.Init(facebook, messenger)
 	return cpu
 }
 
-func NewHandshakeCommandProcessor(facebook IFacebook, messenger IMessenger) ContentProcessor {
+func NewHandshakeCommandProcessor(facebook Facebook, messenger Messenger) ContentProcessor {
 	cpu := &HandshakeCommandProcessor{}
 	cpu.Init(facebook, messenger)
 	return cpu
 }
 
-func NewLoginCommandProcessor(facebook IFacebook, messenger IMessenger) ContentProcessor {
+func NewLoginCommandProcessor(facebook Facebook, messenger Messenger) ContentProcessor {
 	cpu := &LoginCommandProcessor{}
 	cpu.Init(facebook, messenger)
 	return cpu

@@ -48,7 +48,7 @@ type CommonMessageProcessor struct {
 	MessageProcessor
 }
 
-func (processor *CommonMessageProcessor) Init(facebook IFacebook, messenger IMessenger) ICommonMessageProcessor {
+func (processor *CommonMessageProcessor) Init(facebook Facebook, messenger Messenger) ICommonMessageProcessor {
 	if processor.MessageProcessor.Init(facebook, messenger) != nil {
 	}
 	return processor

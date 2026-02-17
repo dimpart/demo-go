@@ -96,7 +96,7 @@ type CommonMessagePacker struct {
 	Queue IMessageWaitingQueue
 }
 
-func (packer *CommonMessagePacker) Init(facebook IFacebook, messenger IMessenger) ICommonMessagePacker {
+func (packer *CommonMessagePacker) Init(facebook Facebook, messenger Messenger) ICommonMessagePacker {
 	if packer.MessagePacker.Init(facebook, messenger) != nil {
 		// TODO:
 		packer.Queue = nil

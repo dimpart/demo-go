@@ -26,9 +26,7 @@
 package db
 
 import (
-	. "github.com/dimchat/core-go/mkm"
 	. "github.com/dimchat/mkm-go/protocol"
-	. "github.com/dimpart/demo-go/sdk/common/mkm"
 	. "github.com/dimpart/demo-go/sdk/utils"
 )
 

@@ -15,17 +15,17 @@ type ICommonArchivist interface {
 	Archivist
 	Barrack
 
-	//GetFacebook() IFacebook
+	//GetFacebook() Facebook
 }
 
 type CommonArchivist struct {
 	//ICommonArchivist
 
-	Facebook IFacebook
+	Facebook Facebook
 	Database AccountDBI
 }
 
-func (archivist *CommonArchivist) Init(facebook IFacebook, database AccountDBI) ICommonArchivist {
+func (archivist *CommonArchivist) Init(facebook Facebook, database AccountDBI) ICommonArchivist {
 	archivist.Facebook = facebook
 	archivist.Database = database
 	return archivist

@@ -38,16 +38,6 @@ type ClientMessageProcessor struct {
 	CommonMessageProcessor
 }
 
-// Override
-func (processor *ClientMessageProcessor) GetMessenger() ICommonMessenger {
-	messenger := processor.CommonMessageProcessor.GetMessenger()
-	cm, ok := messenger.(ICommonMessenger)
-	if ok {
-		return cm
-	}
-	return nil
-}
-
 func (processor *ClientMessageProcessor) checkGroupTimes(content Content, rMsg ReliableMessage) {
 	// TODO: check 'GDT' & 'GHT' in rMsg
 }

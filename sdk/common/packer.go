@@ -39,8 +39,6 @@ import (
 type ICommonMessagePacker interface {
 	Packer
 
-	GetArchivist() Archivist
-
 	// for checking whether user's ready
 	GetVisaKey(user ID) EncryptKey
 
@@ -102,11 +100,6 @@ func (packer *CommonMessagePacker) Init(facebook Facebook, messenger Messenger) 
 		packer.Queue = nil
 	}
 	return packer
-}
-
-// protected
-func (packer *CommonMessagePacker) GetArchivist() Archivist {
-	return packer.Facebook.GetArchivist()
 }
 
 // protected
@@ -194,21 +187,17 @@ func (packer *CommonMessagePacker) EncryptMessage(iMsg InstantMessage) SecureMes
 
 // protected
 func (packer *CommonMessagePacker) CheckAttachments(rMsg ReliableMessage) bool {
-	archivist := packer.GetArchivist()
-	if archivist == nil {
-		panic("archivist not ready")
-		return false
-	}
+	facebook := packer.Facebook
 	sender := rMsg.Sender()
 	// [Meta Protocol]
 	meta := GetMetaAttachment(rMsg)
 	if meta != nil {
-		archivist.SaveMeta(meta, sender)
+		facebook.SaveMeta(meta, sender)
 	}
 	// [Visa Protocol]
 	visa := GetVisaAttachment(rMsg)
 	if visa != nil {
-		archivist.SaveDocument(visa, sender)
+		facebook.SaveDocument(visa, sender)
 	}
 	//
 	//  TODO: check [Visa Protocol] before calling this

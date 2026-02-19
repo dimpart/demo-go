@@ -54,13 +54,20 @@ func (processor *CommonMessageProcessor) Init(facebook Facebook, messenger Messe
 	return processor
 }
 
+func (processor *CommonMessageProcessor) GetFacebook() ICommonFacebook {
+	facebook := processor.MessageProcessor.Facebook
+	return facebook.(ICommonFacebook)
+}
+
+func (processor *CommonMessageProcessor) GetMessenger() ICommonMessenger {
+	messenger := processor.MessageProcessor.Messenger
+	return messenger.(ICommonMessenger)
+}
+
 // protected
 func (processor *CommonMessageProcessor) GetEntityChecker() IEntityChecker {
 	facebook := processor.GetFacebook()
-	if cf, ok := facebook.(ICommonFacebook); ok {
-		return cf.GetEntityChecker()
-	}
-	return nil
+	return facebook.GetEntityChecker()
 }
 
 func (processor *CommonMessageProcessor) checkVisaTime(content Content, rMsg ReliableMessage) bool {

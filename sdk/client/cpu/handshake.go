@@ -36,14 +36,9 @@ type HandshakeCommandProcessor struct {
 	BaseCommandProcessor
 }
 
-// Override
 func (cpu *HandshakeCommandProcessor) GetMessenger() IClientMessenger {
-	messenger := cpu.BaseCommandProcessor.GetMessenger()
-	cm, ok := messenger.(IClientMessenger)
-	if ok {
-		return cm
-	}
-	return nil
+	messenger := cpu.BaseCommandProcessor.Messenger
+	return messenger.(IClientMessenger)
 }
 
 // Override

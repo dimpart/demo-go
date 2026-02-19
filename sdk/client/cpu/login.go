@@ -37,14 +37,9 @@ type LoginCommandProcessor struct {
 	BaseCommandProcessor
 }
 
-// Override
 func (cpu *LoginCommandProcessor) GetMessenger() IClientMessenger {
-	messenger := cpu.BaseCommandProcessor.GetMessenger()
-	cm, ok := messenger.(IClientMessenger)
-	if ok {
-		return cm
-	}
-	return nil
+	messenger := cpu.BaseCommandProcessor.Messenger
+	return messenger.(IClientMessenger)
 }
 
 // private

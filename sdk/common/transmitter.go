@@ -78,33 +78,27 @@ func (transmitter *MessageTransmitter) Init(facebook Facebook, messenger Messeng
 }
 
 // protected
-func (transmitter *MessageTransmitter) Facebook() ICommonFacebook {
-	facebook := transmitter.TwinsHelper.GetFacebook()
-	if face, ok := facebook.(ICommonFacebook); ok {
-		return face
-	}
-	return nil
+func (transmitter *MessageTransmitter) GetFacebook() ICommonFacebook {
+	facebook := transmitter.TwinsHelper.Facebook
+	return facebook.(ICommonFacebook)
 }
 
 // protected
-func (transmitter *MessageTransmitter) Messenger() ICommonMessenger {
-	messenger := transmitter.TwinsHelper.GetMessenger()
-	if mess, ok := messenger.(ICommonMessenger); ok {
-		return mess
-	}
-	return nil
+func (transmitter *MessageTransmitter) GetMessenger() ICommonMessenger {
+	messenger := transmitter.TwinsHelper.Messenger
+	return messenger.(ICommonMessenger)
 }
 
 // Override
 func (transmitter *MessageTransmitter) SendContent(content Content, sender, receiver ID, priority int) Pair[InstantMessage, ReliableMessage] {
 	if sender == nil {
-		facebook := transmitter.Facebook()
+		facebook := transmitter.GetFacebook()
 		current := facebook.GetCurrentUser()
 		sender = current.ID()
 	}
 	env := CreateEnvelope(sender, receiver, nil)
 	iMsg := CreateInstantMessage(env, content)
-	messenger := transmitter.Messenger()
+	messenger := transmitter.GetMessenger()
 	rMsg := messenger.SendInstantMessage(iMsg, priority)
 	return NewPair[InstantMessage, ReliableMessage](iMsg, rMsg)
 }
@@ -116,7 +110,7 @@ func (transmitter *MessageTransmitter) attachVisaTime(sender ID, iMsg InstantMes
 		// no need to attach times for command
 		return false
 	}
-	facebook := transmitter.Facebook()
+	facebook := transmitter.GetFacebook()
 	doc := facebook.GetVisa(sender)
 	if doc == nil {
 		panic("failed to get visa document for sender: " + sender.String())
@@ -148,7 +142,7 @@ func (transmitter *MessageTransmitter) SendInstantMessage(iMsg InstantMessage, p
 	//
 	//  1. encrypt message
 	//
-	messenger := transmitter.Messenger()
+	messenger := transmitter.GetMessenger()
 	sMsg := messenger.EncryptMessage(iMsg)
 	if sMsg == nil {
 		panic("public key not found")
@@ -182,7 +176,7 @@ func (transmitter *MessageTransmitter) SendReliableMessage(rMsg ReliableMessage,
 		return false
 	}
 	// 1. serialize message
-	messenger := transmitter.Messenger()
+	messenger := transmitter.GetMessenger()
 	data := messenger.SerializeMessage(rMsg)
 	if data == nil {
 		//panic("failed to serialize message")

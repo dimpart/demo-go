@@ -38,14 +38,16 @@ type IClientFacebook interface {
  *  Client Facebook with Address Name Service
  */
 type ClientFacebook struct {
-	CommonFacebook
+	//IClientFacebook
+	*CommonFacebook
 }
 
-func (facebook *ClientFacebook) Init(db Database) IClientFacebook {
-	if facebook.CommonFacebook.Init(db) != nil {
-		facebook.Database = db
+func NewClientFacebook(db Database) *ClientFacebook {
+	super := NewCommonFacebook(db)
+	super.Database = db
+	return &ClientFacebook{
+		CommonFacebook: super,
 	}
-	return facebook
 }
 
 //

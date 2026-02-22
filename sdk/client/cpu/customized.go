@@ -84,10 +84,11 @@ type AppCustomizedFilter struct {
 	handlers       map[string]CustomizedContentHandler
 }
 
-func (filter *AppCustomizedFilter) Init() CustomizedContentFilter {
-	filter.defaultHandler = &BaseCustomizedHandler{}
-	filter.handlers = make(map[string]CustomizedContentHandler, 8)
-	return filter
+func NewAppCustomizedFilter() *AppCustomizedFilter {
+	return &AppCustomizedFilter{
+		defaultHandler: &BaseCustomizedHandler{},
+		handlers:       make(map[string]CustomizedContentHandler, 8),
+	}
 }
 
 func (filter *AppCustomizedFilter) SetContentHandler(app, mod string, handler CustomizedContentHandler) {

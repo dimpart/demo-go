@@ -29,13 +29,20 @@ import (
 	. "github.com/dimchat/core-go/protocol"
 	. "github.com/dimchat/dkd-go/protocol"
 	. "github.com/dimchat/mkm-go/protocol"
+	. "github.com/dimchat/sdk-go/sdk"
 	. "github.com/dimpart/demo-go/sdk/common"
 	. "github.com/dimpart/demo-go/sdk/common/protocol"
 	. "github.com/dimpart/demo-go/sdk/utils"
 )
 
 type ClientMessageProcessor struct {
-	CommonMessageProcessor
+	*CommonMessageProcessor
+}
+
+func NewClientMessageProcessor(facebook Facebook, messenger Messenger) *ClientMessageProcessor {
+	return &ClientMessageProcessor{
+		CommonMessageProcessor: NewCommonMessageProcessor(facebook, messenger),
+	}
 }
 
 func (processor *ClientMessageProcessor) checkGroupTimes(content Content, rMsg ReliableMessage) {

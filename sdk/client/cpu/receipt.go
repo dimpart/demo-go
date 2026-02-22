@@ -31,7 +31,7 @@ import (
 )
 
 type ReceiptCommandProcessor struct {
-	BaseCommandProcessor
+	*BaseCommandProcessor
 }
 
 // Override

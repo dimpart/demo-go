@@ -33,7 +33,7 @@ import (
 )
 
 type HandshakeCommandProcessor struct {
-	BaseCommandProcessor
+	*BaseCommandProcessor
 }
 
 func (cpu *HandshakeCommandProcessor) GetMessenger() IClientMessenger {

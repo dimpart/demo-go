@@ -19,11 +19,11 @@ func (loader ClientExtensionLoader) Load() {
 }
 
 func registerCustomizedHandlers() {
-	filter := &AppCustomizedFilter{}
-	if filter.Init() != nil {
-		// 'chat.dim.group:history'
-		handler := &GroupHistoryHandler{}
-		filter.SetContentHandler("chat.dim.group", "history", handler)
-	}
+	filter := NewAppCustomizedFilter()
+
+	// 'chat.dim.group:history'
+	handler := &GroupHistoryHandler{}
+	filter.SetContentHandler("chat.dim.group", "history", handler)
+
 	SetCustomizedContentFilter(filter)
 }

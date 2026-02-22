@@ -34,7 +34,7 @@ import (
 )
 
 type LoginCommandProcessor struct {
-	BaseCommandProcessor
+	*BaseCommandProcessor
 }
 
 func (cpu *LoginCommandProcessor) GetMessenger() IClientMessenger {

@@ -10,25 +10,19 @@ type ILibraryLoader interface {
 }
 
 type LibraryLoader struct {
+	extensionLoader IExtensionLoader
+	pluginLoader    IPluginLoader
 
 	// flag
 	loaded bool
-
-	extensionLoader IExtensionLoader
-	pluginLoader    IPluginLoader
 }
 
-func (loader *LibraryLoader) Init(extensionLoader IExtensionLoader, pluginLoader IPluginLoader) ILibraryLoader {
-	if extensionLoader == nil {
-		extensionLoader = &ClientExtensionLoader{}
+func NewLibraryLoader() ILibraryLoader {
+	return &LibraryLoader{
+		extensionLoader: &ClientExtensionLoader{},
+		pluginLoader:    &CommonPluginLoader{},
+		loaded:          false,
 	}
-	if pluginLoader == nil {
-		pluginLoader = &CommonPluginLoader{}
-	}
-	loader.extensionLoader = extensionLoader
-	loader.pluginLoader = pluginLoader
-	loader.loaded = false
-	return loader
 }
 
 func (loader *LibraryLoader) Run() {

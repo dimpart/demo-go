@@ -28,39 +28,37 @@ package db
 import . "github.com/dimchat/mkm-go/protocol"
 
 type ProviderInfo struct {
-
-	ID ID
-	Name string
-	URL string
+	ID     ID
+	Name   string
+	URL    string
 	Chosen bool
 }
 
-func NewProviderInfo(spid ID, name string, url string, chosen bool) *ProviderInfo {
-	info := new(ProviderInfo)
-	info.ID = spid
-	info.Name = name
-	info.URL = url
-	info.Chosen = chosen
-	return info
+func NewProviderInfo(pid ID, name string, url string, chosen bool) *ProviderInfo {
+	return &ProviderInfo{
+		ID:     pid,
+		Name:   name,
+		URL:    url,
+		Chosen: chosen,
+	}
 }
 
 type StationInfo struct {
-
-	ID ID
-	Name string
-	Host string
-	Port uint16
+	ID     ID
+	Name   string
+	Host   string
+	Port   uint16
 	Chosen bool
 }
 
 func NewStationInfo(sid ID, name string, host string, port uint16, chosen bool) *StationInfo {
-	info := new(StationInfo)
-	info.ID = sid
-	info.Name = name
-	info.Host = host
-	info.Port = port
-	info.Chosen = chosen
-	return info
+	return &StationInfo{
+		ID:     sid,
+		Name:   name,
+		Host:   host,
+		Port:   port,
+		Chosen: chosen,
+	}
 }
 
 /**
@@ -104,7 +102,7 @@ type ProviderTable interface {
 	 * @param identifier - sp ID
 	 * @return false on failed
 	 */
-	RemoveProvider(identifeir ID) bool
+	RemoveProvider(identifier ID) bool
 }
 
 /**

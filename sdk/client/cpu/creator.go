@@ -41,7 +41,7 @@ import (
  *  Delegate for CPU factory
  */
 type ClientContentProcessorCreator struct {
-	BaseContentProcessorCreator
+	*BaseContentProcessorCreator
 }
 
 //-------- IProcessorCreator
@@ -91,19 +91,19 @@ func (creator *ClientContentProcessorCreator) CreateCommandProcessor(msgType Mes
 //
 
 func NewReceiptCommandProcessor(facebook Facebook, messenger Messenger) ContentProcessor {
-	cpu := &ReceiptCommandProcessor{}
-	cpu.Init(facebook, messenger)
-	return cpu
+	return &ReceiptCommandProcessor{
+		BaseCommandProcessor: NewBaseCommandProcessor(facebook, messenger),
+	}
 }
 
 func NewHandshakeCommandProcessor(facebook Facebook, messenger Messenger) ContentProcessor {
-	cpu := &HandshakeCommandProcessor{}
-	cpu.Init(facebook, messenger)
-	return cpu
+	return &HandshakeCommandProcessor{
+		BaseCommandProcessor: NewBaseCommandProcessor(facebook, messenger),
+	}
 }
 
 func NewLoginCommandProcessor(facebook Facebook, messenger Messenger) ContentProcessor {
-	cpu := &LoginCommandProcessor{}
-	cpu.Init(facebook, messenger)
-	return cpu
+	return &LoginCommandProcessor{
+		BaseCommandProcessor: NewBaseCommandProcessor(facebook, messenger),
+	}
 }

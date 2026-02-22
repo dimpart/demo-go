@@ -74,11 +74,12 @@ type IClientMessenger interface {
  *  Client Messenger for Handshake &amp; Broadcast Report
  */
 type ClientMessenger struct {
-	CommonMessenger
+	//IClientMessenger
+	*CommonMessenger
 }
 
-func (messenger *ClientMessenger) Init(session Session, facebook ICommonFacebook, database CipherKeyDelegate) *ClientMessenger {
-	if messenger.CommonMessenger.Init(session, facebook, database) != nil {
+func NewClientMessenger(session Session, facebook ICommonFacebook, database CipherKeyDelegate) *ClientMessenger {
+	return &ClientMessenger{
+		CommonMessenger: NewCommonMessenger(session, facebook, database),
 	}
-	return messenger
 }

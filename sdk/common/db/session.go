@@ -40,7 +40,7 @@ type LoginDBI interface {
 	 * @param user - user ID
 	 * @return LoginCommand, ReliableMessage
 	 */
-	LoadLoginCommandMessage(user ID) Pair[LoginCommand, ReliableMessage]
+	GetLoginCommandMessage(user ID) Pair[LoginCommand, ReliableMessage]
 
 	/**
 	 *  Save last login command for user

@@ -26,10 +26,10 @@
 package db
 
 import (
-	. "github.com/dimchat/core-go/protocol"
 	. "github.com/dimchat/mkm-go/crypto"
 	. "github.com/dimchat/mkm-go/format"
 	. "github.com/dimchat/mkm-go/protocol"
+	. "github.com/dimchat/plugins-go/crypto"
 	. "github.com/dimpart/demo-go/sdk/common/db"
 	. "github.com/dimpart/demo-go/sdk/utils"
 )
@@ -57,7 +57,7 @@ func (db *Storage) GetPrivateKeysForDecryption(user ID) []DecryptKey {
 }
 
 // Override
-func (db *Storage) GetPrivateKeyForSignature(user ID) PrivateKey {
+func (db *Storage) GetPrivateKeyForSignature(user ID) SignKey {
 	keys := getCommunicationKeys(db, user)
 	if len(keys) > 0 {
 		// sign message with communication key
@@ -68,7 +68,7 @@ func (db *Storage) GetPrivateKeyForSignature(user ID) PrivateKey {
 }
 
 // Override
-func (db *Storage) GetPrivateKeyForVisaSignature(user ID) PrivateKey {
+func (db *Storage) GetPrivateKeyForVisaSignature(user ID) SignKey {
 	return getIdentityKey(db, user)
 }
 
@@ -142,7 +142,7 @@ func saveCommunicationKeys(db *Storage, user ID, keys []PrivateKey) bool {
 }
 
 // place holder
-var emptyPrivateKey = GeneratePrivateKey(ECC)
+var emptyPrivateKey PrivateKey = &ECCPrivateKey{}
 
 func getIdentityKey(db *Storage, user ID) PrivateKey {
 	// 1. try from memory cache

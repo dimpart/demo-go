@@ -40,7 +40,7 @@ type CipherKeyDBI interface {
 	 * @param receiver - to where (contact or user/group ID)
 	 * @return cipher key
 	 */
-	LoadCipherKey(sender, receiver ID) SymmetricKey
+	GetCipherKey(sender, receiver ID) SymmetricKey
 
 	/**
 	 *  Cache cipher key for reusing, with the direction (from 'sender' to 'receiver')
@@ -61,7 +61,7 @@ type GroupKeysDBI interface {
 	 * @param sender - member ID
 	 * @return encoded message keys
 	 */
-	LoadGroupKeys(group, sender ID) SymmetricKeyHelper
+	GetGroupKeys(group, sender ID) SymmetricKeyHelper
 
 	/**
 	 *  Save encrypted message keys for group

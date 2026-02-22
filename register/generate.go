@@ -27,20 +27,22 @@ package main
 
 import (
 	"fmt"
-	. "github.com/dimchat/demo-go/sdk/client"
-	. "github.com/dimchat/demo-go/sdk/extensions"
+	"strings"
+
+	. "github.com/dimchat/core-go/protocol"
 	. "github.com/dimchat/mkm-go/crypto"
 	. "github.com/dimchat/mkm-go/protocol"
-	"strings"
+	. "github.com/dimchat/mkm-go/types"
+	. "github.com/dimpart/demo-go/sdk/extensions"
 )
 
 func getUserInfo(identifier ID) *UserInfo {
 	facebook := SharedFacebook()
 	return &UserInfo{
-		ID: identifier,
-		Meta: facebook.GetMeta(identifier),
-		Visa: facebook.GetDocument(identifier, VISA),
-		IdentityKey: facebook.GetPrivateKeyForVisaSignature(identifier),
+		ID:               identifier,
+		Meta:             facebook.GetMeta(identifier),
+		Visa:             facebook.GetDocument(identifier, VISA),
+		IdentityKey:      facebook.GetPrivateKeyForVisaSignature(identifier),
 		CommunicationKey: facebook.GetPrivateKeysForDecryption(identifier)[0],
 	}
 }
@@ -52,17 +54,18 @@ func saveInfo(identifier ID, meta Meta, doc Document, idKey SignKey, msgKey Decr
 	//fmt.Println("******** id key:", idKey.Map())
 	//fmt.Println("******** msg key:", msgKey.Map())
 	facebook := SharedFacebook()
+	database := facebook.GetDatabase()
 	// id key
 	identityKey, ok := idKey.(PrivateKey)
 	if ok && identityKey != nil {
-		if facebook.SavePrivateKey(identityKey, "M", identifier) == false {
+		if database.SavePrivateKey(identityKey, "M", identifier) == false {
 			return false
 		}
 	}
 	// msg key
 	communicationKey, ok := msgKey.(PrivateKey)
 	if ok && communicationKey != nil {
-		if facebook.SavePrivateKey(communicationKey, "V", identifier) == false {
+		if database.SavePrivateKey(communicationKey, "V", identifier) == false {
 			return false
 		}
 	}
@@ -71,7 +74,7 @@ func saveInfo(identifier ID, meta Meta, doc Document, idKey SignKey, msgKey Decr
 		return false
 	}
 	// document
-	if facebook.SaveDocument(doc) == false {
+	if facebook.SaveDocument(doc, identifier) == false {
 		return false
 	}
 	// OK
@@ -83,27 +86,34 @@ func doGenerate(path string, args []string) bool {
 		// arguments
 		seed := getOptionString(args, "--seed")
 		name := getOptionString(args, "--name")
+		var avatar TransportableFile
+		url := getOptionString(args, "--avatar")
+		if url != "" {
+			avatar = CreateTransportableFile(nil, "", ParseURL(url), nil)
+		}
 		// check account type
 		aType := strings.ToLower(args[0])
 		if aType == "user" {
-			avatar := getOptionString(args, "--avatar")
 			info := GenerateUserInfo(name, avatar)
 			return saveInfo(info.ID, info.Meta, info.Visa, info.IdentityKey, info.CommunicationKey)
 		} else if aType == "group" {
-			founder := IDParse(getOptionString(args, "--founder"))
+			founder := ParseID(getOptionString(args, "--founder"))
 			if founder != nil {
 				info := GenerateGroupInfo(getUserInfo(founder), name, seed)
 				return saveInfo(info.ID, info.Meta, info.Bulletin, nil, nil)
 			}
 		} else if aType == "station" {
-			logo := getOptionString(args, "--logo")
+			var logo TransportableFile
+			url = getOptionString(args, "--logo")
+			if url != "" {
+				logo = CreateTransportableFile(nil, "", ParseURL(url), nil)
+			}
 			host := getOptionString(args, "--host")
 			port := getOptionInteger(args, "--port")
 			info := GenerateStationInfo(seed, name, logo, host, uint16(port))
 			return saveInfo(info.ID, info.Meta, info.Visa, info.IdentityKey, info.CommunicationKey)
 		} else if aType == "robot" {
-			avatar := getOptionString(args, "--avatar")
-			info := GenerateRobotInfo(seed, name, avatar)
+			info := GenerateBotInfo(seed, name, avatar)
 			return saveInfo(info.ID, info.Meta, info.Visa, info.IdentityKey, info.CommunicationKey)
 		}
 	}

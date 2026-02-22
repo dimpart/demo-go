@@ -208,7 +208,7 @@ func (archivist *CommonArchivist) checkDocumentExpired(doc Document, did ID) boo
 // Override
 func (archivist *CommonArchivist) LocalUsers() []ID {
 	db := archivist.Database
-	return db.LoadLocalUsers()
+	return db.GetLocalUsers()
 }
 
 /**

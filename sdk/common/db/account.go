@@ -32,7 +32,7 @@ type MetaDBI interface {
 	/**
 	 *  Get meta from DB
 	 */
-	LoadMeta(entity ID) Meta
+	GetMeta(entity ID) Meta
 
 	SaveMeta(meta Meta, entity ID) bool
 }
@@ -42,7 +42,7 @@ type DocumentDBI interface {
 	/**
 	 *  Get documents from DB
 	 */
-	LoadDocuments(entity ID) []Document
+	GetDocuments(entity ID) []Document
 
 	SaveDocument(doc Document, entity ID) bool
 }
@@ -52,7 +52,7 @@ type UserDBI interface {
 	/**
 	 *  Get local user ID list
 	 */
-	LoadLocalUsers() []ID
+	GetLocalUsers() []ID
 
 	SaveLocalUsers(users []ID) bool
 }
@@ -62,7 +62,7 @@ type ContactDBI interface {
 	/**
 	 *  Get contacts from DB
 	 */
-	LoadContacts(user ID) []ID
+	GetContacts(user ID) []ID
 
 	SaveContacts(contacts []ID, user ID) bool
 }

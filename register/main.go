@@ -27,7 +27,6 @@ package main
 
 import (
 	"fmt"
-	_ "github.com/dimchat/demo-go/sdk/client"
 	"os"
 	"strconv"
 )
@@ -35,11 +34,11 @@ import (
 func trimQuotations(text string) string {
 	size := len(text)
 	if size > 1 {
-		if text[0] == '"' && text[size - 1] == '"' {
-			return text[1:size - 1]
+		if text[0] == '"' && text[size-1] == '"' {
+			return text[1 : size-1]
 		}
-		if text[0] == '\'' && text[size - 1] == '\'' {
-			return text[1:size - 1]
+		if text[0] == '\'' && text[size-1] == '\'' {
+			return text[1 : size-1]
 		}
 	}
 	return text
@@ -53,12 +52,12 @@ func getOptionString(args []string, key string) string {
 		pos--
 		item = args[pos]
 		if item == key {
-			return trimQuotations(args[pos + 1])
+			return trimQuotations(args[pos+1])
 		}
 		if len(item) > kLen {
 			// starts with "$(key)="
-			if item[:kLen + 1] == key+"=" {
-				return trimQuotations(item[kLen + 1:])
+			if item[:kLen+1] == key+"=" {
+				return trimQuotations(item[kLen+1:])
 			}
 		}
 	}
@@ -75,14 +74,14 @@ func getOptionInteger(args []string, key string) int {
 }
 
 func showHelp(path string) {
-	fmt.Printf("\n" +
-		"\n    Usages:" +
-		"\n        %s <command> [options]" +
-		"\n" +
-		"\n    Commands:" +
-		"\n        generate                Generate account." +
-		"\n        modify                  Modify account info." +
-		"\n        help                    Show help for commands." +
+	fmt.Printf("\n"+
+		"\n    Usages:"+
+		"\n        %s <command> [options]"+
+		"\n"+
+		"\n    Commands:"+
+		"\n        generate                Generate account."+
+		"\n        modify                  Modify account info."+
+		"\n        help                    Show help for commands."+
 		"\n\n", path)
 }
 
@@ -90,46 +89,46 @@ func doHelp(path string, args []string) {
 	if len(args) == 1 {
 		cmd := args[0]
 		if cmd == "generate" {
-			fmt.Printf("\n" +
-				"\n    Usages:" +
-				"\n        %s generate <type> [options]" +
-				"\n" +
-				"\n    Description:" +
-				"\n        Generate account with type, e.g. 'USER', 'GROUP', 'STATION', 'ROBOT'." +
-				"\n" +
-				"\n    Generate Options:" +
-				"\n        --seed <username>       Generate meta with seed string." +
-				"\n        --founder <ID>          Generate group meta with founder ID." +
+			fmt.Printf("\n"+
+				"\n    Usages:"+
+				"\n        %s generate <type> [options]"+
+				"\n"+
+				"\n    Description:"+
+				"\n        Generate account with type, e.g. 'USER', 'GROUP', 'STATION', 'ROBOT'."+
+				"\n"+
+				"\n    Generate Options:"+
+				"\n        --seed <username>       Generate meta with seed string."+
+				"\n        --founder <ID>          Generate group meta with founder ID."+
 				"\n\n", path)
 			return
 		} else if cmd == "modify" {
-			fmt.Printf("\n" +
-				"\n    Usages:" +
-				"\n        %s modify <ID> [options]" +
-				"\n" +
-				"\n    Descriptions:" +
-				"\n        Modify account document with ID." +
-				"\n" +
-				"\n    Modify Options:" +
-				"\n        --name <name>           Change name for user/group." +
-				"\n        --avatar <URL>          Change avatar URL for user." +
-				"\n        --host <IP>             Change IP for station." +
-				"\n        --port <number>         Change port for station." +
-				"\n        --owner <ID>            Change group info with owner ID." +
+			fmt.Printf("\n"+
+				"\n    Usages:"+
+				"\n        %s modify <ID> [options]"+
+				"\n"+
+				"\n    Descriptions:"+
+				"\n        Modify account document with ID."+
+				"\n"+
+				"\n    Modify Options:"+
+				"\n        --name <name>           Change name for user/group."+
+				"\n        --avatar <URL>          Change avatar URL for user."+
+				"\n        --host <IP>             Change IP for station."+
+				"\n        --port <number>         Change port for station."+
+				"\n        --owner <ID>            Change group info with owner ID."+
 				"\n\n", path)
 			return
 		}
 	}
-	fmt.Printf("\n" +
-		"\n    Usages:" +
-		"\n        %s help <command>" +
-		"\n" +
-		"\n    Description:" +
-		"\n        Show help for commands." +
-		"\n" +
-		"\n    Commands:" +
-		"\n        generate" +
-		"\n        modify" +
+	fmt.Printf("\n"+
+		"\n    Usages:"+
+		"\n        %s help <command>"+
+		"\n"+
+		"\n    Description:"+
+		"\n        Show help for commands."+
+		"\n"+
+		"\n    Commands:"+
+		"\n        generate"+
+		"\n        modify"+
 		"\n\n", path)
 }
 

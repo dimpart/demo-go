@@ -25,7 +25,10 @@
  */
 package dimp
 
-import . "github.com/dimpart/demo-go/sdk/common"
+import (
+	. "github.com/dimpart/demo-go/sdk/common"
+	. "github.com/dimpart/demo-go/sdk/database"
+)
 
 type IClientFacebook interface {
 	ICommonFacebook
@@ -36,6 +39,13 @@ type IClientFacebook interface {
  */
 type ClientFacebook struct {
 	CommonFacebook
+}
+
+func (facebook *ClientFacebook) Init(db Database) IClientFacebook {
+	if facebook.CommonFacebook.Init(db) != nil {
+		facebook.Database = db
+	}
+	return facebook
 }
 
 //

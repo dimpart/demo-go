@@ -48,7 +48,7 @@ func (db *Storage) SaveDocument(doc Document, entity ID) bool {
 }
 
 // Override
-func (db *Storage) LoadDocuments(entity ID) []Document {
+func (db *Storage) GetDocuments(entity ID) []Document {
 	// 1. try from memory cache
 	docs := db._documentTable[entity.String()]
 	if docs == nil {

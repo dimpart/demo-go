@@ -37,7 +37,7 @@ import (
 //-------- LoginTable
 
 // Override
-func (db *Storage) LoadLoginCommandMessage(user ID) Pair[LoginCommand, ReliableMessage] {
+func (db *Storage) GetLoginCommandMessage(user ID) Pair[LoginCommand, ReliableMessage] {
 	cmd, msg := getLoginInfo(db, user)
 	return NewPair[LoginCommand, ReliableMessage](cmd, msg)
 }

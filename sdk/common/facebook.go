@@ -101,7 +101,7 @@ func (facebook *CommonFacebook) GetCurrentUser() User {
 	if currentUser != nil {
 		return currentUser
 	}
-	users := facebook.Database.LoadLocalUsers()
+	users := facebook.Database.GetLocalUsers()
 	if len(users) == 0 {
 		return nil
 	}
@@ -203,14 +203,14 @@ func (facebook *CommonFacebook) GetName(did ID) string {
 
 // Override
 func (facebook *CommonFacebook) GetMeta(did ID) Meta {
-	meta := facebook.Database.LoadMeta(did)
+	meta := facebook.Database.GetMeta(did)
 	facebook.Checker.CheckMeta(did, meta)
 	return meta
 }
 
 // Override
 func (facebook *CommonFacebook) GetDocuments(did ID) []Document {
-	docs := facebook.Database.LoadDocuments(did)
+	docs := facebook.Database.GetDocuments(did)
 	facebook.Checker.CheckDocuments(did, docs)
 	return docs
 }
@@ -221,7 +221,7 @@ func (facebook *CommonFacebook) GetDocuments(did ID) []Document {
 
 // Override
 func (facebook *CommonFacebook) GetContacts(user ID) []ID {
-	return facebook.Database.LoadContacts(user)
+	return facebook.Database.GetContacts(user)
 }
 
 // Override

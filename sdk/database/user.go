@@ -30,7 +30,7 @@ import . "github.com/dimchat/mkm-go/protocol"
 //-------- UserTable
 
 // Override
-func (db *Storage) LoadLocalUsers() []ID {
+func (db *Storage) GetLocalUsers() []ID {
 	return db._users
 }
 

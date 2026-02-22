@@ -63,7 +63,7 @@ type PrivateKeyDBI interface {
 	 * @param user - user ID
 	 * @return first key marked for signature
 	 */
-	GetPrivateKeyForSignature(user ID) PrivateKey
+	GetPrivateKeyForSignature(user ID) SignKey
 
 	/**
 	 *  Get private key for user
@@ -71,7 +71,7 @@ type PrivateKeyDBI interface {
 	 * @param user - user ID
 	 * @return the private key matched with meta.key
 	 */
-	GetPrivateKeyForVisaSignature(user ID) PrivateKey
+	GetPrivateKeyForVisaSignature(user ID) SignKey
 }
 
 //

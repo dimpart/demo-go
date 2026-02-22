@@ -37,19 +37,19 @@ type GroupDBI interface {
 	/**
 	 *  Get group founder/owner from DB
 	 */
-	LoadFounder(group ID) ID
-	LoadOwner(group ID) ID
+	GetFounder(group ID) ID
+	GetOwner(group ID) ID
 
 	/**
 	 *  Get group members from DB
 	 */
-	LoadMembers(group ID) []ID
+	GetMembers(group ID) []ID
 	SaveMembers(members []ID, group ID) bool
 
 	/**
 	 *  Get group admins from DB
 	 */
-	LoadAdministrators(group ID) []ID
+	GetAdministrators(group ID) []ID
 	SaveAdministrators(members []ID, group ID) bool
 }
 
@@ -83,7 +83,7 @@ type GroupHistoryDBI interface {
 	 * @param group - group ID
 	 * @return history list
 	 */
-	LoadGroupHistories(group ID) []Pair[GroupCommand, ReliableMessage]
+	GetGroupHistories(group ID) []Pair[GroupCommand, ReliableMessage]
 
 	/**
 	 *  Load last 'reset' group command
@@ -91,7 +91,7 @@ type GroupHistoryDBI interface {
 	 * @param group - group ID
 	 * @return reset command message
 	 */
-	LoadResetCommandMessage(group ID) Pair[ResetCommand, ReliableMessage]
+	GetResetCommandMessage(group ID) Pair[ResetCommand, ReliableMessage]
 
 	/**
 	 *  Clean group commands for members:
@@ -113,5 +113,5 @@ type GroupHistoryDBI interface {
 	 * @param group - group ID
 	 * @return false on failed
 	 */
-	ClearGroupAdminHistories(group ID)
+	ClearGroupAdminHistories(group ID) bool
 }

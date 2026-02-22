@@ -35,7 +35,7 @@ import (
 //-------- ContactTable
 
 // Override
-func (db *Storage) LoadContacts(user ID) []ID {
+func (db *Storage) GetContacts(user ID) []ID {
 	arr := db._contactTable[user.String()]
 	if arr == nil {
 		arr = loadContacts(db, user)
@@ -45,7 +45,7 @@ func (db *Storage) LoadContacts(user ID) []ID {
 }
 
 func (db *Storage) AddContact(contact ID, user ID) bool {
-	arr := db.LoadContacts(user)
+	arr := db.GetContacts(user)
 	for _, item := range arr {
 		if contact.Equal(item) {
 			// duplicated
@@ -57,7 +57,7 @@ func (db *Storage) AddContact(contact ID, user ID) bool {
 }
 
 func (db *Storage) RemoveContact(contact ID, user ID) bool {
-	arr := db.LoadContacts(user)
+	arr := db.GetContacts(user)
 	var pos = -1
 	for index, id := range arr {
 		if contact.Equal(id) {

@@ -197,7 +197,7 @@ func (checker *EntityChecker) NeedsQueryMembers(group ID, members []ID) bool {
 }
 
 func (checker *EntityChecker) GetLastGroupHistoryTime(group ID) Time {
-	array := checker.database.LoadGroupHistories(group)
+	array := checker.database.GetGroupHistories(group)
 	if len(array) == 0 {
 		return nil
 	}

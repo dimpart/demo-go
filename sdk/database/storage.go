@@ -51,6 +51,8 @@ type Database interface {
 	ContactDBI
 	GroupDBI
 
+	GroupHistoryDBI
+
 	// root directory for database
 	SetRoot(root string)
 }
@@ -90,7 +92,7 @@ type Storage struct {
 
 func (db *Storage) Init() Database {
 
-	db._root = "/tmp/.dim"
+	db._root = "/var/dim"
 
 	db._password = NewPlainKey()
 

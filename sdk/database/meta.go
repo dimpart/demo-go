@@ -47,7 +47,7 @@ func (db *Storage) SaveMeta(meta Meta, entity ID) bool {
 }
 
 // Override
-func (db *Storage) LoadMeta(entity ID) Meta {
+func (db *Storage) GetMeta(entity ID) Meta {
 	// 1. try from memory cache
 	meta := db._metaTable[entity.String()]
 	if meta == nil {

@@ -66,7 +66,7 @@ type ICommonFacebook interface {
  */
 type CommonFacebook struct {
 	//ICommonFacebook
-	BaseFacebook
+	*BaseFacebook
 
 	Database AccountDBI
 
@@ -75,13 +75,13 @@ type CommonFacebook struct {
 	currentUser User
 }
 
-func (facebook *CommonFacebook) Init(ds EntityDataSource) ICommonFacebook {
-	if facebook.BaseFacebook.Init(ds) != nil {
-		facebook.Database = nil
-		facebook.Checker = nil
-		facebook.currentUser = nil
+func NewCommonFacebook(db EntityDataSource) *CommonFacebook {
+	return &CommonFacebook{
+		BaseFacebook: NewBaseFacebook(db),
+		Database:     nil,
+		Checker:      nil,
+		currentUser:  nil,
 	}
-	return facebook
 }
 
 func (facebook *CommonFacebook) GetDatabase() AccountDBI {

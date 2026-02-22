@@ -38,57 +38,61 @@ import (
 type AddressNameServer struct {
 	//AddressNameService
 
-	_reserved   map[string]bool
-	_caches     map[string]ID
-	_namesTable map[ID][]string
+	reserved   map[string]bool
+	caches     map[string]ID
+	namesTable map[ID][]string
 }
 
-func (ans *AddressNameServer) Init() AddressNameService {
+func NewAddressNameServer() *AddressNameServer {
 	// reserved names
-	ans._reserved = make(map[string]bool, len(KEYWORDS))
+	reserved := make(map[string]bool, len(KEYWORDS))
 	for _, item := range KEYWORDS {
-		ans._reserved[item] = true
+		reserved[item] = true
 	}
 
 	// constant ANS records
-	ans._caches = make(map[string]ID, 1024)
-	ans.setID("all", EVERYONE)
-	ans.setID("everyone", EVERYONE)
-	ans.setID("anyone", ANYONE)
-	ans.setID("owner", ANYONE)
-	ans.setID("founder", FOUNDER)
+	caches := make(map[string]ID, 1024)
+	caches["all"] = EVERYONE
+	caches["everyone"] = EVERYONE
+	caches["anyone"] = ANYONE
+	caches["owner"] = ANYONE
+	caches["founder"] = FOUNDER
 
 	// temp
-	ans._namesTable = make(map[ID][]string, 128)
+	namesTable := make(map[ID][]string, 128)
 
-	return ans
+	return &AddressNameServer{
+		reserved:   reserved,
+		caches:     caches,
+		namesTable: namesTable,
+	}
 }
 
 func (ans *AddressNameServer) setID(name string, identifier ID) {
 	if ValueIsNil(identifier) {
-		delete(ans._caches, name)
+		delete(ans.caches, name)
 	} else {
-		ans._caches[name] = identifier
+		ans.caches[name] = identifier
 	}
 }
 
 // Override
 func (ans *AddressNameServer) IsReserved(name string) bool {
-	return ans._reserved[name]
+	return ans.reserved[name]
 }
 
 // Override
 func (ans *AddressNameServer) GetID(name string) ID {
-	return ans._caches[name]
+	return ans.caches[name]
 }
 
 // Override
 func (ans *AddressNameServer) GetNames(identifier ID) []string {
-	array := ans._namesTable[identifier]
+	array := ans.namesTable[identifier]
 	if array == nil {
 		array = make([]string, 0, 1)
 		// TODO: update all tables?
-		for key, value := range ans._caches {
+		for key, value := range ans.caches {
 			if identifier.Equal(value) {
 				array = append(array, key)
 			}

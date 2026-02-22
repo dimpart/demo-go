@@ -88,18 +88,18 @@ type IMessageWaitingQueue interface {
 
 type CommonMessagePacker struct {
 	//ICommonMessagePacker
-	MessagePacker
+	*MessagePacker
 
 	// protected
 	Queue IMessageWaitingQueue
 }
 
-func (packer *CommonMessagePacker) Init(facebook Facebook, messenger Messenger) ICommonMessagePacker {
-	if packer.MessagePacker.Init(facebook, messenger) != nil {
+func NewCommonMessagePacker(facebook Facebook, messenger Messenger) *CommonMessagePacker {
+	return &CommonMessagePacker{
+		MessagePacker: NewMessagePacker(facebook, messenger),
 		// TODO:
-		packer.Queue = nil
+		Queue: nil,
 	}
-	return packer
 }
 
 // protected

@@ -34,20 +34,24 @@ type EntityChecker struct {
 	Respond IEntityRespond
 }
 
-func (checker *EntityChecker) Init(db AccountDBI) IEntityChecker {
-	checker.metaQueries = NewFrequencyChecker[string](QUERY_EXPIRES)
-	checker.docsQueries = NewFrequencyChecker[string](QUERY_EXPIRES)
-	checker.membersQueries = NewFrequencyChecker[string](QUERY_EXPIRES)
+func NewEntityChecker(db AccountDBI) *EntityChecker {
+	return &EntityChecker{
+		metaQueries:    NewFrequencyChecker[string](QUERY_EXPIRES),
+		docsQueries:    NewFrequencyChecker[string](QUERY_EXPIRES),
+		membersQueries: NewFrequencyChecker[string](QUERY_EXPIRES),
 
-	checker.documentResponses = NewFrequencyChecker[string](QUERY_EXPIRES)
+		documentResponses: NewFrequencyChecker[string](RESPOND_EXPIRES),
 
-	checker.lastDocumentTimes = NewRecentTimeChecker[string]()
-	checker.lastHistoryTimes = NewRecentTimeChecker[string]()
+		lastDocumentTimes: NewRecentTimeChecker[string](),
+		lastHistoryTimes:  NewRecentTimeChecker[string](),
 
-	checker.lastActiveMembers = make(map[string]ID, 128)
+		lastActiveMembers: make(map[string]ID, 128),
 
-	checker.database = db
-	return checker
+		database: db,
+
+		Request: nil,
+		Respond: nil,
+	}
 }
 
 // protected

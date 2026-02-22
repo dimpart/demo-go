@@ -45,13 +45,13 @@ type ICommonMessageProcessor interface {
  */
 type CommonMessageProcessor struct {
 	//ICommonMessageProcessor
-	MessageProcessor
+	*MessageProcessor
 }
 
-func (processor *CommonMessageProcessor) Init(facebook Facebook, messenger Messenger) ICommonMessageProcessor {
-	if processor.MessageProcessor.Init(facebook, messenger) != nil {
+func NewCommonMessageProcessor(facebook Facebook, messenger Messenger) *CommonMessageProcessor {
+	return &CommonMessageProcessor{
+		MessageProcessor: NewMessageProcessor(facebook, messenger),
 	}
-	return processor
 }
 
 func (processor *CommonMessageProcessor) GetFacebook() ICommonFacebook {

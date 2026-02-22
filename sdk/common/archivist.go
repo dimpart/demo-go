@@ -25,10 +25,11 @@ type CommonArchivist struct {
 	Database AccountDBI
 }
 
-func (archivist *CommonArchivist) Init(facebook Facebook, database AccountDBI) ICommonArchivist {
-	archivist.Facebook = facebook
-	archivist.Database = database
-	return archivist
+func NewCommonArchivist(facebook Facebook, database AccountDBI) *CommonArchivist {
+	return &CommonArchivist{
+		Facebook: facebook,
+		Database: database,
+	}
 }
 
 //
@@ -74,8 +75,7 @@ func (archivist *CommonArchivist) CreateUser(uid ID) User {
 		return NewBot(uid)
 	}
 	// general user, or 'anyone@anywhere'
-	user := &BaseUser{}
-	return user.Init(uid)
+	return NewBaseUser(uid)
 }
 
 // Override
@@ -87,8 +87,7 @@ func (archivist *CommonArchivist) CreateGroup(gid ID) Group {
 		return NewProvider(gid)
 	}
 	// general group, or 'everyone@everywhere'
-	group := &BaseGroup{}
-	return group.Init(gid)
+	return NewBaseGroup(gid)
 }
 
 //

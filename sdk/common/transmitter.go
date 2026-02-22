@@ -68,13 +68,13 @@ type Transmitter interface {
 
 type MessageTransmitter struct {
 	//Transmitter
-	TwinsHelper
+	*TwinsHelper
 }
 
-func (transmitter *MessageTransmitter) Init(facebook Facebook, messenger Messenger) Transmitter {
-	if transmitter.TwinsHelper.Init(facebook, messenger) != nil {
+func NewMessageTransmitter(facebook Facebook, messenger Messenger) *MessageTransmitter {
+	return &MessageTransmitter{
+		TwinsHelper: NewTwinsHelper(facebook, messenger),
 	}
-	return transmitter
 }
 
 // protected

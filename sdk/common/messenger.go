@@ -61,7 +61,7 @@ type ICommonMessenger interface {
  */
 type CommonMessenger struct {
 	//ICommonMessenger
-	BaseMessenger
+	*BaseMessenger
 
 	// protected
 	Session     Session
@@ -69,13 +69,13 @@ type CommonMessenger struct {
 	Transmitter Transmitter
 }
 
-func (messenger *CommonMessenger) Init(session Session, facebook ICommonFacebook, database CipherKeyDelegate) ICommonMessenger {
-	if messenger.BaseMessenger.Init(facebook, database) != nil {
-		messenger.Session = session
-		messenger.Facebook = facebook
-		//messenger.Transmitter = (&MessageTransmitter{}).Init(facebook, messenger)
+func NewCommonMessenger(session Session, facebook ICommonFacebook, database CipherKeyDelegate) *CommonMessenger {
+	return &CommonMessenger{
+		BaseMessenger: NewBaseMessenger(facebook, database),
+		Session:       session,
+		Facebook:      facebook,
+		Transmitter:   nil, // NewMessageTransmitter(facebook, messenger)
 	}
-	return messenger
 }
 
 func (messenger *CommonMessenger) GetSession() Session {

@@ -110,10 +110,12 @@ func parseAddress(str string) Address {
 	//
 	//  TODO: parse for other types of address
 	//
-	if result == nil && 4 <= size && size <= 64 {
-		return NewUnknownAddress(str)
+	if result == nil {
+		if 4 <= size && size <= 64 {
+			return NewUnknownAddress(str)
+		}
+		panic("invalid address: " + str)
 	}
-	panic("invalid address: " + str)
 	return result
 }
 

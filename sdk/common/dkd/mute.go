@@ -1,6 +1,6 @@
 /* license: https://mit-license.org
  *
- *  DIM-SDK : Decentralized Instant Messaging Software Development Kit
+ *  DIMP : Decentralized Instant Messaging Protocol
  *
  *                                Written in 2021 by Moky <albert.moky@gmail.com>
  *
@@ -39,38 +39,41 @@ import (
 
 type BaseMuteCommand struct {
 	//MuteCommand
-	BaseCommand
+	*BaseCommand
 
 	// mute-list
-	_list []ID
+	list []ID
 }
 
-func (content *BaseMuteCommand) InitWithMap(dict StringKeyMap) MuteCommand {
-	if content.BaseCommand.InitWithMap(dict) != nil {
-		// lazy load
-		content._list = nil
-	}
-	return content
-}
-
-func (content *BaseMuteCommand) InitWithList(list []ID) MuteCommand {
-	if content.BaseCommand.Init(MUTE) != nil {
-		if !ValueIsNil(list) {
-			content.SetMuteList(list)
+func NewBaseMuteCommand(dict StringKeyMap, list []ID) *BaseMuteCommand {
+	if dict != nil {
+		// init mute command with map
+		return &BaseMuteCommand{
+			BaseCommand: NewBaseCommand(dict, "", ""),
+			// lazy load
+			list: nil,
 		}
+	}
+	// new mute command
+	content := &BaseMuteCommand{
+		BaseCommand: NewBaseCommand(nil, "", MUTE),
+		list:        list,
+	}
+	if list != nil {
+		content.Set("list", IDRevert(list))
 	}
 	return content
 }
 
 // Override
 func (content *BaseMuteCommand) MuteList() []ID {
-	if content._list == nil {
+	if content.list == nil {
 		list := content.Get("list")
 		if list != nil {
-			content._list = IDConvert(list)
+			content.list = IDConvert(list)
 		}
 	}
-	return content._list
+	return content.list
 }
 
 // Override
@@ -80,5 +83,5 @@ func (content *BaseMuteCommand) SetMuteList(list []ID) {
 	} else {
 		content.Set("list", IDRevert(list))
 	}
-	content._list = list
+	content.list = list
 }

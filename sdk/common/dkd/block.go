@@ -1,6 +1,6 @@
 /* license: https://mit-license.org
  *
- *  DIM-SDK : Decentralized Instant Messaging Software Development Kit
+ *  DIMP : Decentralized Instant Messaging Protocol
  *
  *                                Written in 2021 by Moky <albert.moky@gmail.com>
  *
@@ -39,46 +39,49 @@ import (
 
 type BaseBlockCommand struct {
 	//BlockCommand
-	BaseCommand
+	*BaseCommand
 
 	// block-list
-	_list []ID
+	list []ID
 }
 
-func (content *BaseBlockCommand) InitWithMap(dict StringKeyMap) BlockCommand {
-	if content.BaseCommand.InitWithMap(dict) != nil {
-		// lazy load
-		content._list = nil
-	}
-	return content
-}
-
-func (content *BaseBlockCommand) InitWithList(list []ID) BlockCommand {
-	if content.BaseCommand.Init(BLOCK) != nil {
-		if !ValueIsNil(list) {
-			content.SetBlockList(list)
+func NewBaseBlockCommand(dict StringKeyMap, list []ID) *BaseBlockCommand {
+	if dict != nil {
+		// init block command with map
+		return &BaseBlockCommand{
+			BaseCommand: NewBaseCommand(dict, "", ""),
+			// lazy load
+			list: nil,
 		}
+	}
+	// new block command
+	content := &BaseBlockCommand{
+		BaseCommand: NewBaseCommand(nil, "", BLOCK),
+		list:        list,
+	}
+	if list != nil {
+		content.Set("list", IDRevert(list))
 	}
 	return content
 }
 
 // Override
 func (content *BaseBlockCommand) BlockList() []ID {
-	if content._list == nil {
+	if content.list == nil {
 		list := content.Get("list")
 		if list != nil {
-			content._list = IDConvert(list)
+			content.list = IDConvert(list)
 		}
 	}
-	return content._list
+	return content.list
 }
 
 // Override
 func (content *BaseBlockCommand) SetBlockList(list []ID) {
-	if ValueIsNil(list) {
+	if list == nil {
 		content.Remove("list")
 	} else {
 		content.Set("list", IDRevert(list))
 	}
-	content._list = list
+	content.list = list
 }

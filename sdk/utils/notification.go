@@ -51,58 +51,54 @@ type NotificationObserver interface {
 
 // Implementations
 type BaseNotification struct {
-	_name   string
-	_sender interface{}
-	_info   StringKeyMap
+	name   string
+	sender interface{}
+	info   StringKeyMap
 }
 
-func NewNotification(name string, sender interface{}, info StringKeyMap) *BaseNotification {
-	if ValueIsNil(info) {
+func NewNotification(name string, sender interface{}, info StringKeyMap) Notification {
+	if info == nil {
 		info = NewMap()
 	}
-	notification := new(BaseNotification)
-	notification.Init(name, sender, info)
-	return notification
-}
-
-func (notify *BaseNotification) Init(name string, sender interface{}, info StringKeyMap) *BaseNotification {
-	notify._name = name
-	notify._sender = sender
-	notify._info = info
-	return notify
+	return &BaseNotification{
+		name:   name,
+		sender: sender,
+		info:   info,
+	}
 }
 
 func (notify *BaseNotification) Name() string {
-	return notify._name
+	return notify.name
 }
 
 func (notify *BaseNotification) Sender() interface{} {
-	return notify._sender
+	return notify.sender
 }
 
 func (notify *BaseNotification) Info() StringKeyMap {
-	return notify._info
+	return notify.info
 }
 
 /**
  *  Notification dispatcher
  */
 type NotificationCenter struct {
-	_observers map[string][]NotificationObserver
+	observers map[string][]NotificationObserver
 }
 
-func (center *NotificationCenter) Init() *NotificationCenter {
-	center._observers = make(map[string][]NotificationObserver, 128)
-	return center
+func NewNotificationCenter() *NotificationCenter {
+	return &NotificationCenter{
+		observers: make(map[string][]NotificationObserver, 128),
+	}
 }
 
 func (center *NotificationCenter) getObservers(name string) []NotificationObserver {
-	return center._observers[name]
+	return center.observers[name]
 }
 
 // Add observer with notification name
 func (center *NotificationCenter) Add(observer NotificationObserver, name string) {
-	array := center._observers[name]
+	array := center.observers[name]
 	if array == nil {
 		array = make([]NotificationObserver, 0, 8)
 	} else {
@@ -113,27 +109,27 @@ func (center *NotificationCenter) Add(observer NotificationObserver, name string
 			}
 		}
 	}
-	center._observers[name] = append(array, observer)
+	center.observers[name] = append(array, observer)
 }
 
 // Remove observer from notification center with name
 func (center *NotificationCenter) Remove(observer NotificationObserver, name string) {
-	array := center._observers[name]
+	array := center.observers[name]
 	if array != nil {
 		array = remove(array, observer)
 		if len(array) == 0 {
-			delete(center._observers, name)
+			delete(center.observers, name)
 		} else {
-			center._observers[name] = array
+			center.observers[name] = array
 		}
 	}
 }
 
 // Remove observer from notification center, no matter what names
 func (center *NotificationCenter) RemoveAll(observer NotificationObserver) {
-	count := len(center._observers)
+	count := len(center.observers)
 	names := make([]string, 0, count)
-	for key := range center._observers {
+	for key := range center.observers {
 		names = append(names, key)
 	}
 	for _, name := range names {
@@ -173,7 +169,7 @@ func remove(list []NotificationObserver, item NotificationObserver) []Notificati
 }
 
 // Default notification center
-var defaultCenter = new(NotificationCenter).Init()
+var defaultCenter = NewNotificationCenter()
 
 // Add observer with notification name
 func NotificationAddObserver(observer NotificationObserver, name string) {

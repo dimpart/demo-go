@@ -10,7 +10,7 @@ import (
  *  ~~~~~~~~~~~~~~~~~
  */
 type compatibleShortener struct {
-	MessageShortener
+	*MessageShortener
 }
 
 // Override
@@ -36,7 +36,7 @@ func (shortener *compatibleShortener) CompressReliableMessage(msg StringKeyMap) 
  *  ~~~~~~~~~~~~~~~~~~
  */
 type compatibleCompressor struct {
-	MessageCompressor
+	*MessageCompressor
 }
 
 // Override
@@ -61,12 +61,18 @@ type compressFactory struct {
 }
 
 // Override
-func (factory compressFactory) CreateCompressor() Compressor {
-	shortener := &compatibleShortener{}
-	shortener.Init(ShortKeys.ContentKeys, ShortKeys.CryptoKeys, ShortKeys.MessageKeys)
-	compressor := &compatibleCompressor{}
-	compressor.Init(shortener)
-	return compressor
+func (compressFactory) CreateCompressor() Compressor {
+	// create shortener
+	contentKeys := ShortKeys.ContentKeys
+	cryptoKeys := ShortKeys.CryptoKeys
+	messageKeys := ShortKeys.MessageKeys
+	shortener := &compatibleShortener{
+		MessageShortener: NewMessageShortener(contentKeys, cryptoKeys, messageKeys),
+	}
+	// create compressor
+	return &compatibleCompressor{
+		MessageCompressor: NewMessageCompressor(shortener),
+	}
 }
 
 func init() {

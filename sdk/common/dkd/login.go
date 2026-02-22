@@ -1,6 +1,6 @@
 /* license: https://mit-license.org
  *
- *  DIM-SDK : Decentralized Instant Messaging Software Development Kit
+ *  DIMP : Decentralized Instant Messaging Protocol
  *
  *                                Written in 2021 by Moky <albert.moky@gmail.com>
  *
@@ -39,13 +39,21 @@ import (
 
 type BaseLoginCommand struct {
 	//LoginCommand
-	BaseCommand
+	*BaseCommand
 }
 
-func (content *BaseLoginCommand) InitWithID(did ID) LoginCommand {
-	if content.BaseCommand.Init(LOGIN) != nil {
-		content.Set("did", did.String())
+func NewBaseLoginCommand(dict StringKeyMap, did ID) *BaseLoginCommand {
+	if dict != nil {
+		// init with login command with map
+		return &BaseLoginCommand{
+			BaseCommand: NewBaseCommand(dict, "", ""),
+		}
 	}
+	// new login command
+	content := &BaseLoginCommand{
+		BaseCommand: NewBaseCommand(nil, "", LOGIN),
+	}
+	content.Set("did", did.String())
 	return content
 }
 

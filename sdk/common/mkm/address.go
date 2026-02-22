@@ -52,7 +52,7 @@ type compatibleAddressFactory struct {
 }
 
 // Override
-func (factory compatibleAddressFactory) GenerateAddress(meta Meta, network EntityType) Address {
+func (compatibleAddressFactory) GenerateAddress(meta Meta, network EntityType) Address {
 	address := meta.GenerateAddress(network)
 	if address != nil {
 		cache := GetAddressCache()
@@ -62,7 +62,7 @@ func (factory compatibleAddressFactory) GenerateAddress(meta Meta, network Entit
 }
 
 // Override
-func (factory compatibleAddressFactory) ParseAddress(str string) Address {
+func (compatibleAddressFactory) ParseAddress(str string) Address {
 	cache := GetAddressCache()
 	address := cache.Get(str)
 	if address == nil {
@@ -117,12 +117,6 @@ func parseAddress(str string) Address {
 	return result
 }
 
-func NewUnknownAddress(address string) Address {
-	unknown := &UnknownAddress{}
-	unknown.InitWithString(address)
-	return unknown
-}
-
 /**
  *  Unsupported Address
  *  ~~~~~~~~~~~~~~~~~~~
@@ -132,7 +126,13 @@ type UnknownAddress struct {
 	ConstantString
 }
 
+func NewUnknownAddress(address string) Address {
+	return &UnknownAddress{
+		ConstantString: *NewConstantString(address),
+	}
+}
+
 // Override
-func (address *UnknownAddress) Network() EntityType {
+func (UnknownAddress) Network() EntityType {
 	return USER
 }

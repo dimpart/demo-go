@@ -52,8 +52,9 @@ type Provider interface {
 }
 
 func NewProvider(pid ID) Provider {
-	provider := &ServiceProvider{}
-	return provider.Init(pid)
+	return &ServiceProvider{
+		BaseGroup: NewBaseGroup(pid),
+	}
 }
 
 /**
@@ -61,13 +62,7 @@ func NewProvider(pid ID) Provider {
  *  ~~~~~~~~~~~~~~~~~
  */
 type ServiceProvider struct {
-	BaseGroup
-}
-
-func (sp *ServiceProvider) Init(identifier ID) Provider {
-	if sp.BaseGroup.Init(identifier) != nil {
-	}
-	return sp
+	*BaseGroup
 }
 
 // Override

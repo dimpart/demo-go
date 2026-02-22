@@ -75,13 +75,13 @@ func (factory compatibleMetaFactory) ParseMeta(info StringKeyMap) Meta {
 	version := helper.GetMetaType(info, "")
 	switch version {
 	case "1", "mkm", "MKM":
-		out = NewMetaWithMap(info)
+		out = NewDefaultMeta(info, "", nil, "", nil)
 		break
 	case "2", "btc", "BTC":
-		out = NewBTCMetaWithMap(info)
+		out = NewBTCMeta(info, "", nil, "", nil)
 		break
 	case "4", "eth", "ETH":
-		out = NewETHMetaWithMap(info)
+		out = NewETHMeta(info, "", nil, "", nil)
 		break
 	default:
 		break

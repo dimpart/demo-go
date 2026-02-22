@@ -3,7 +3,6 @@ package ext
 import (
 	. "github.com/dimchat/core-go/protocol"
 	. "github.com/dimchat/dkd-go/protocol"
-	. "github.com/dimchat/mkm-go/types"
 	. "github.com/dimchat/plugins-go/ext"
 	. "github.com/dimpart/demo-go/sdk/common/dkd"
 	. "github.com/dimpart/demo-go/sdk/common/protocol"
@@ -106,49 +105,21 @@ func copyContentFactory(msgType, alias string) {
 func registerCommandFactories() {
 
 	// Handshake
-	registerCommandCreator(HANDSHAKE, func(dict StringKeyMap) Command {
-		content := &BaseHandshakeCommand{}
-		content.InitWithMap(dict)
-		return content
-	})
+	registerCommandCreator(HANDSHAKE, NewHandshakeCommandWithMap)
 
 	// Login
-	registerCommandCreator(LOGIN, func(dict StringKeyMap) Command {
-		content := &BaseLoginCommand{}
-		content.InitWithMap(dict)
-		return content
-	})
+	registerCommandCreator(LOGIN, NewLoginCommandWithMap)
 
 	// Mute
-	registerCommandCreator(MUTE, func(dict StringKeyMap) Command {
-		content := &BaseMuteCommand{}
-		content.InitWithMap(dict)
-		return content
-	})
+	registerCommandCreator(MUTE, NewMuteCommandWithMap)
 
 	// Block
-	registerCommandCreator(BLOCK, func(dict StringKeyMap) Command {
-		content := &BaseBlockCommand{}
-		content.InitWithMap(dict)
-		return content
-	})
+	registerCommandCreator(BLOCK, NewBlockCommandWithMap)
 
 	// Report
-	registerCommandCreator(REPORT, func(dict StringKeyMap) Command {
-		content := &BaseReportCommand{}
-		content.InitWithMap(dict)
-		return content
-	})
-	registerCommandCreator(ONLINE, func(dict StringKeyMap) Command {
-		content := &BaseReportCommand{}
-		content.InitWithMap(dict)
-		return content
-	})
-	registerCommandCreator(OFFLINE, func(dict StringKeyMap) Command {
-		content := &BaseReportCommand{}
-		content.InitWithMap(dict)
-		return content
-	})
+	registerCommandCreator(REPORT, NewReportCommandWithMap)
+	registerCommandCreator(ONLINE, NewReportCommandWithMap)
+	registerCommandCreator(OFFLINE, NewReportCommandWithMap)
 
 }
 

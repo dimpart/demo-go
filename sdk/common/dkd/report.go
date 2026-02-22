@@ -32,18 +32,27 @@ package dkd
 
 import (
 	. "github.com/dimchat/core-go/dkd"
+	. "github.com/dimchat/mkm-go/types"
 	. "github.com/dimpart/demo-go/sdk/common/protocol"
 )
 
 type BaseReportCommand struct {
 	//ReportCommand
-	BaseCommand
+	*BaseCommand
 }
 
-func (content *BaseReportCommand) InitWithTitle(title string) ReportCommand {
-	if content.BaseCommand.Init(REPORT) != nil {
-		content.SetTitle(title)
+func NewBaseReportCommand(dict StringKeyMap, title string) *BaseReportCommand {
+	if dict != nil {
+		// init report command with map
+		return &BaseReportCommand{
+			BaseCommand: NewBaseCommand(dict, "", ""),
+		}
 	}
+	// new report command
+	content := &BaseReportCommand{
+		BaseCommand: NewBaseCommand(nil, "", REPORT),
+	}
+	content.Set("title", title)
 	return content
 }
 

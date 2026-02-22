@@ -55,19 +55,14 @@ type Bot interface {
 	Provider() ID
 }
 
-func NewBot(did ID) Bot {
-	bot := &BotUser{}
-	return bot.Init(did)
+func NewBot(bid ID) Bot {
+	return &BotUser{
+		BaseUser: NewBaseUser(bid),
+	}
 }
 
 type BotUser struct {
-	BaseUser
-}
-
-func (user *BotUser) Init(uid ID) Bot {
-	if user.BaseUser.Init(uid) != nil {
-	}
-	return user
+	*BaseUser
 }
 
 // Override

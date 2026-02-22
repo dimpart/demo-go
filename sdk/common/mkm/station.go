@@ -80,28 +80,28 @@ type Station interface {
 }
 
 func NewStation(did ID) Station {
-	station := &BaseStation{}
-	return station.Init(did, "", 0)
+	return NewBaseStation(did, "", 0)
 }
 
 type BaseStation struct {
 	//User
 
-	_user User
+	user User
 
-	_host string
-	_port uint16
+	host string
+	port uint16
 }
 
-func (server *BaseStation) Init(did ID, host string, port uint16) Station {
-	if did == nil {
-		did = ANY_STATION
+func NewBaseStation(sid ID, host string, port uint16) *BaseStation {
+	if sid == nil {
+		sid = ANY_STATION
 	}
-	user := &BaseUser{}
-	server._user = user.Init(did)
-	server._host = host
-	server._port = port
-	return server
+	user := NewBaseUser(sid)
+	return &BaseStation{
+		user: user,
+		host: host,
+		port: port,
+	}
 }
 
 // Override
@@ -110,7 +110,7 @@ func (server *BaseStation) Equal(other interface{}) bool {
 		return sameStation(station, server)
 	}
 	// others?
-	return server._user.Equal(other)
+	return server.user.Equal(other)
 }
 
 // Override
@@ -140,112 +140,111 @@ func (server *BaseStation) Provider() ID {
 
 // Override
 func (server *BaseStation) Host() string {
-	if server._host == "" {
+	if server.host == "" {
 		doc := server.Profile()
 		if doc != nil {
 			host := doc.GetProperty("host")
-			server._host = ConvertString(host, "")
+			server.host = ConvertString(host, "")
 		}
-		if server._host == "" {
-			server._host = "0.0.0.0"
+		if server.host == "" {
+			server.host = "0.0.0.0"
 		}
 	}
-	return server._host
+	return server.host
 }
 
 // Override
 func (server *BaseStation) Port() uint16 {
-	if server._port == 0 {
+	if server.port == 0 {
 		doc := server.Profile()
 		if doc != nil {
 			port := doc.GetProperty("port")
-			server._port = ConvertUInt16(port, 0)
+			server.port = ConvertUInt16(port, 0)
 		}
-		if server._port == 0 {
-			server._port = 9394
+		if server.port == 0 {
+			server.port = 9394
 		}
 	}
-	return server._port
+	return server.port
 }
 
 func (server *BaseStation) SetID(sid ID) {
 	delegate := server.DataSource()
-	user := &BaseUser{}
-	user.Init(sid)
+	user := NewBaseUser(sid)
 	user.SetDataSource(delegate)
-	server._user = user
+	server.user = user
 }
 
 //-------- Entity
 
 // Override
 func (server *BaseStation) ID() ID {
-	return server._user.ID()
+	return server.user.ID()
 }
 
 // Override
 func (server *BaseStation) Type() EntityType {
-	return server._user.Type()
+	return server.user.Type()
 }
 
 // Override
 func (server *BaseStation) DataSource() EntityDataSource {
-	return server._user.DataSource()
+	return server.user.DataSource()
 }
 
 // Override
 func (server *BaseStation) SetDataSource(facebook EntityDataSource) {
-	server._user.SetDataSource(facebook)
+	server.user.SetDataSource(facebook)
 }
 
 // Override
 func (server *BaseStation) Meta() Meta {
-	return server._user.Meta()
+	return server.user.Meta()
 }
 
 // Override
 func (server *BaseStation) Documents() []Document {
-	return server._user.Documents()
+	return server.user.Documents()
 }
 
 //-------- User
 
 // Override
 func (server *BaseStation) Contacts() []ID {
-	return server._user.Contacts()
+	return server.user.Contacts()
 }
 
 // Override
 func (server *BaseStation) Terminals() []string {
-	return server._user.Terminals()
+	return server.user.Terminals()
 }
 
 // Override
 func (server *BaseStation) Verify(data []byte, signature []byte) bool {
-	return server._user.Verify(data, signature)
+	return server.user.Verify(data, signature)
 }
 
 // Override
 func (server *BaseStation) EncryptBundle(plaintext []byte) EncryptedBundle {
-	return server._user.EncryptBundle(plaintext)
+	return server.user.EncryptBundle(plaintext)
 }
 
 // Override
 func (server *BaseStation) Sign(data []byte) []byte {
-	return server._user.Sign(data)
+	return server.user.Sign(data)
 }
 
 // Override
 func (server *BaseStation) DecryptBundle(bundle EncryptedBundle) []byte {
-	return server._user.DecryptBundle(bundle)
+	return server.user.DecryptBundle(bundle)
 }
 
 // Override
 func (server *BaseStation) SignVisa(visa Visa) Visa {
-	return server._user.SignVisa(visa)
+	return server.user.SignVisa(visa)
 }
 
 // Override
 func (server *BaseStation) VerifyVisa(visa Visa) bool {
-	return server._user.VerifyVisa(visa)
+	return server.user.VerifyVisa(visa)
 }

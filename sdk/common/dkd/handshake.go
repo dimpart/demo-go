@@ -32,6 +32,7 @@ package dkd
 
 import (
 	. "github.com/dimchat/core-go/dkd"
+	. "github.com/dimchat/mkm-go/types"
 	. "github.com/dimpart/demo-go/sdk/common/protocol"
 )
 
@@ -55,16 +56,25 @@ func getState(title string, session string) HandshakeState {
 
 type BaseHandshakeCommand struct {
 	//HandshakeCommand
-	BaseCommand
+	*BaseCommand
 }
 
-func (content *BaseHandshakeCommand) InitWithTitle(title string, sessionKey string) HandshakeCommand {
-	if content.BaseCommand.Init(HANDSHAKE) != nil {
-		// text message
-		content.Set("title", title)
-		// session key
-		content.Set("session", sessionKey)
+func NewBaseHandshakeCommand(dict StringKeyMap, title, sessionKey string) *BaseHandshakeCommand {
+	if dict != nil {
+		// init handshake command with map
+		return &BaseHandshakeCommand{
+			BaseCommand: NewBaseCommand(dict, "", ""),
+		}
 	}
+	// new handshake command
+	content := &BaseHandshakeCommand{
+		BaseCommand: NewBaseCommand(nil, "", HANDSHAKE),
+	}
+	// text message
+	content.Set("title", title)
+	// session key
+	content.Set("session", sessionKey)
+	// OK
 	return content
 }
 

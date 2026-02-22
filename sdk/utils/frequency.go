@@ -35,11 +35,6 @@ type IFrequencyChecker[K comparable] interface {
 	IsExpired(key K, now Time, force bool) bool
 }
 
-func NewFrequencyChecker[K comparable](lifeSpan Duration) IFrequencyChecker[K] {
-	checker := &FrequencyChecker[K]{}
-	return checker.Init(lifeSpan)
-}
-
 /**
  *  Frequency checker for duplicated queries
  */
@@ -51,10 +46,12 @@ type FrequencyChecker[K comparable] struct {
 	lock    sync.Mutex
 }
 
-func (checker *FrequencyChecker[K]) Init(lifeSpan Duration) IFrequencyChecker[K] {
-	checker.expires = lifeSpan
-	checker.records = make(map[K]Time, 1024)
-	return checker
+func NewFrequencyChecker[K comparable](lifeSpan Duration) IFrequencyChecker[K] {
+	return &FrequencyChecker[K]{
+		expires: lifeSpan,
+		records: make(map[K]Time, 1024),
+		lock:    sync.Mutex{},
+	}
 }
 
 func (checker *FrequencyChecker[K]) checkExpired(key K, now Time) bool {

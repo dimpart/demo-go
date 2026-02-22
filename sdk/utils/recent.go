@@ -36,11 +36,6 @@ type IRecentTimeChecker[K comparable] interface {
 	IsExpired(key K, now Time) bool
 }
 
-func NewRecentTimeChecker[K comparable]() IRecentTimeChecker[K] {
-	checker := &RecentTimeChecker[K]{}
-	return checker.Init()
-}
-
 type RecentTimeChecker[K comparable] struct {
 	//IRecentTimeChecker
 
@@ -48,9 +43,10 @@ type RecentTimeChecker[K comparable] struct {
 	lock  sync.Mutex
 }
 
-func (checker *RecentTimeChecker[K]) Init() IRecentTimeChecker[K] {
-	checker.times = make(map[K]Time, 1024)
-	return checker
+func NewRecentTimeChecker[K comparable]() *RecentTimeChecker[K] {
+	return &RecentTimeChecker[K]{
+		times: make(map[K]Time, 1024),
+	}
 }
 
 // Override

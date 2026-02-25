@@ -1,6 +1,6 @@
 /* license: https://mit-license.org
  *
- *  DIM-SDK : Decentralized Instant Messaging Software Development Kit
+ *  DIMP : Decentralized Instant Messaging Protocol
  *
  *                                Written in 2021 by Moky <albert.moky@gmail.com>
  *
@@ -37,23 +37,21 @@ import (
 
 const BLOCK = "block"
 
-/**
- *  Block Command
- *
- *  <blockquote><pre>
- *  data format: {
- *      type : 0x88,
- *      sn   : 123,
- *
- *      command : "block",
- *      list    : []      // block-list
- *  }
- *  </pre></blockquote>
- */
+// BlockCommand defines the interface for block-list management commands
+//
+// # Implements the Command interface for DIM network block operations
+//
+//	Data Format: {
+//	    "type": 0x88,
+//	    "sn": 123,
+//
+//	    "command": "block",
+//	    "list": []
+//	}
 type BlockCommand interface {
 	Command
 
-	// block-list
+	// BlockList returns the list of user IDs marked for blocking
 	BlockList() []ID
 	SetBlockList(list []ID)
 }

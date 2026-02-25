@@ -27,33 +27,45 @@ package utils
 
 import . "github.com/dimchat/mkm-go/types"
 
-/**
- *  Notification object with name, sender and extra info
- */
+// Notification defines the interface for a generic notification object
+//
+// Carries a named event with associated sender and extra info
 type Notification interface {
+
+	// Name returns the unique identifier/type of the notification
 	Name() string
+
+	// Sender returns the originator of the notification
 	Sender() interface{}
+
+	// Info returns extra info associated with the notification
 	Info() StringKeyMap
 }
 
-/**
- *  Notification Observer
- */
+// NotificationObserver defines the interface for objects that listen to notifications
+//
+// Implements the observer pattern for reactive handling of named events
 type NotificationObserver interface {
 
-	/**
-	 *  Callback for notification
-	 *
-	 * @param notify - notification with name, sender and extra info
-	 */
+	// OnNotificationReceived is the callback invoked when a notification is dispatched
+	//
+	// Parameter notify: Notification instance containing event details (name, sender, info)
 	OnNotificationReceived(notify Notification)
 }
 
-// Implementations
+// BaseNotification provides a concrete implementation of the Notification interface
+//
+// Serves as the base struct for all concrete notification types
 type BaseNotification struct {
-	name   string
+
+	// name is the unique identifier/type of the notification
+	name string
+
+	// sender is the originator of the notification
 	sender interface{}
-	info   StringKeyMap
+
+	// info contains extra info for the notification
+	info StringKeyMap
 }
 
 func NewNotification(name string, sender interface{}, info StringKeyMap) Notification {
@@ -79,10 +91,14 @@ func (notify *BaseNotification) Info() StringKeyMap {
 	return notify.info
 }
 
-/**
- *  Notification dispatcher
- */
+// NotificationCenter implements the publish-subscribe pattern for notification dispatching
+//
+// Manages a registry of observers and dispatches notifications to relevant subscribers
 type NotificationCenter struct {
+
+	// observers maps notification names to lists of subscribed observers
+	//
+	// When a notification is dispatched, all observers for its name receive it
 	observers map[string][]NotificationObserver
 }
 

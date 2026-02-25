@@ -1,6 +1,6 @@
 /* license: https://mit-license.org
  *
- *  DIM-SDK : Decentralized Instant Messaging Software Development Kit
+ *  DIMP : Decentralized Instant Messaging Protocol
  *
  *                                Written in 2021 by Moky <albert.moky@gmail.com>
  *
@@ -37,23 +37,21 @@ import (
 
 const MUTE = "mute"
 
-/**
- *  Mute Command
- *
- *  <blockquote><pre>
- *  data format: {
- *      type : 0x88,
- *      sn   : 123,
- *
- *      command : "mute",
- *      list    : []      // mute-list
- *  }
- *  </pre></blockquote>
- */
+// MuteCommand defines the interface for mute-list management commands
+//
+// # Implements the Command interface for DIM network mute operations
+//
+//	Data Format: {
+//	    "type": 0x88,
+//	    "sn": 123,    ]
+//
+//	    "command": "mute",
+//	    "list": []
+//	}
 type MuteCommand interface {
 	Command
 
-	// mute-list
+	// MuteList returns the list of user IDs marked for muting
 	MuteList() []ID
 	SetMuteList(list []ID)
 }

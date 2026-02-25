@@ -7,8 +7,8 @@ import (
 
 /**
  *  Message Shortener
- *  ~~~~~~~~~~~~~~~~~
  */
+
 type compatibleShortener struct {
 	*MessageShortener
 }
@@ -33,8 +33,8 @@ func (shortener *compatibleShortener) CompressReliableMessage(msg StringKeyMap) 
 
 /**
  *  Message Compressor
- *  ~~~~~~~~~~~~~~~~~~
  */
+
 type compatibleCompressor struct {
 	*MessageCompressor
 }
@@ -54,8 +54,8 @@ func (compressor *compatibleCompressor) ExtractContent(data []byte, key StringKe
 
 /**
  *  Compress Factory
- *  ~~~~~~~~~~~~~~~~
  */
+
 type compressFactory struct {
 	//CompressFactory
 }

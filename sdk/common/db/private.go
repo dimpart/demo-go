@@ -1,28 +1,3 @@
-/* license: https://mit-license.org
- * ==============================================================================
- * The MIT License (MIT)
- *
- * Copyright (c) 2021 Albert Moky
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- * ==============================================================================
- */
 package db
 
 import (
@@ -37,40 +12,48 @@ const (
 	VISA_KEY = "V"
 )
 
+// PrivateKeyDBI defines the interface for private key persistence operations
+//
+// Manages storage and retrieval of user private keys with different usage purposes
 type PrivateKeyDBI interface {
 
-	/**
-	 *  Save private key for user
-	 *
-	 * @param user - user ID
-	 * @param key - private key
-	 * @param type - 'M' for matching meta.key; or 'V' for matching visa.key
-	 * @return false on error
-	 */
+	// SavePrivateKey stores a private key associated with a user and usage type
+	//
+	// Key Type Identifiers:
+	//   'M' - Key matches meta.key (for Meta signature/validation)
+	//   'V' - Key matches visa.key (for Visa document signature)
+	// Parameters:
+	//   - key     - Private key to persist (must be valid PrivateKey implementation)
+	//   - keyType - Usage type identifier ('M' or 'V')
+	//   - user    - User ID to associate with the private key
+	// Returns: true if key saved successfully, false on database error
 	SavePrivateKey(key PrivateKey, keyType string, user ID) bool
 
-	/**
-	 *  Get private keys for user
-	 *
-	 * @param user - user ID
-	 * @return all keys marked for decryption
-	 */
+	// GetPrivateKeysForDecryption retrieves all private keys for a user marked for decryption
+	//
+	// Returns keys implementing the DecryptKey interface (for message/data decryption)
+	//
+	// Parameters:
+	//   - user - User ID to retrieve decryption keys for
+	// Returns: Slice of DecryptKey instances (empty slice if no keys found or error)
 	GetPrivateKeysForDecryption(user ID) []DecryptKey
 
-	/**
-	 *  Get private key for user
-	 *
-	 * @param user - user ID
-	 * @return first key marked for signature
-	 */
+	// GetPrivateKeyForSignature retrieves the primary private key for a user marked for general signature
+	//
+	// Returns the first valid key implementing the SignKey interface (for general-purpose signing)
+	//
+	// Parameters:
+	//   - user - User ID to retrieve signature key for
+	// Returns: Primary SignKey instance (nil if no signature key found)
 	GetPrivateKeyForSignature(user ID) SignKey
 
-	/**
-	 *  Get private key for user
-	 *
-	 * @param user - user ID
-	 * @return the private key matched with meta.key
-	 */
+	// GetPrivateKeyForVisaSignature retrieves the private key for a user matched with meta.key (Visa signing)
+	//
+	// Returns key implementing SignKey interface specifically for Visa document signature
+	//
+	// Parameters:
+	//   - user - User ID to retrieve Visa signature key for
+	// Returns: Visa-specific SignKey instance (nil if no matching key found)
 	GetPrivateKeyForVisaSignature(user ID) SignKey
 }
 

@@ -37,21 +37,15 @@ import (
 
 /**
  *  Bot User
- *  ~~~~~~~~
  */
+
 type Bot interface {
 	User
 
-	/**
-	 *  Bot Document
-	 */
+	// Bot Document
 	Profile() Document
 
-	/**
-	 *  Get provider ID
-	 *
-	 * @return ICP ID, bot group
-	 */
+	// Provider ID
 	Provider() ID
 }
 

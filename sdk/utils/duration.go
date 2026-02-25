@@ -71,11 +71,9 @@ const (
 
 var ZeroDuration = DurationOfMilliseconds(0)
 
-/**
- *  A span of time
- *  ~~~~~~~~~~~~~~
- *  such as 27 days, 4 hours, 12 minutes, and 3 seconds.
- */
+// Duration defines the interface for representing a span of time
+//
+// Represents a measurable time interval (e.g., 27 days, 4 hours, 12 minutes, 3 seconds)
 type Duration interface {
 	Equal(other interface{}) bool
 	String() string
@@ -161,9 +159,17 @@ func DurationOfDays(days int32) Duration {
 	}
 }
 
-/**
- *  The result of this method can be a negative period if the end is before the start.
- */
+// DurationBetween calculates the time span between two Time instances
+//
+// # Returns a Duration representing the difference between endTime and startTime
+//
+// Key Behavior: Returns negative Duration if endTime is chronologically before startTime
+//
+// Parameters:
+//   - startTime - Starting point of the time interval
+//   - endTime   - Ending point of the time interval
+//
+// Returns: Duration instance (negative if endTime < startTime)
 func DurationBetween(startTime, endTime Time) Duration {
 	seconds := TimeToFloat64(endTime) - TimeToFloat64(startTime)
 	millis := int64(seconds * MILLIS_PER_SECOND)

@@ -1,28 +1,3 @@
-/* license: https://mit-license.org
- * ==============================================================================
- * The MIT License (MIT)
- *
- * Copyright (c) 2021 Albert Moky
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- * ==============================================================================
- */
 package db
 
 import (
@@ -31,46 +6,61 @@ import (
 	. "github.com/dimchat/mkm-go/types"
 )
 
+// CipherKeyDBI defines the interface for symmetric cipher key persistence operations
+//
+// # Manages storage and retrieval of directional symmetric keys used for encrypting messages between entities
+//
+// Supports 1:1 communication (user ↔ user/contact) and 1:N communication (user → group)
 type CipherKeyDBI interface {
 
-	/**
-	 *  Get cipher key for encrypt message from 'sender' to 'receiver'
-	 *
-	 * @param sender   - from where (user or contact ID)
-	 * @param receiver - to where (contact or user/group ID)
-	 * @return cipher key
-	 */
+	// GetCipherKey retrieves the symmetric cipher key for encrypting messages from sender to receiver
+	//
+	// Keys are directional: sender→receiver key may differ from receiver→sender key
+	//
+	// Parameters:
+	//   - sender   - ID of the message sender (user/contact ID)
+	//   - receiver - ID of the message receiver (user/contact/group ID)
+	// Returns: SymmetricKey for message encryption (nil if no key found for the direction)
 	GetCipherKey(sender, receiver ID) SymmetricKey
 
-	/**
-	 *  Cache cipher key for reusing, with the direction (from 'sender' to 'receiver')
-	 *
-	 * @param sender   - from where (user or contact ID)
-	 * @param receiver - to where (contact or user/group ID)
-	 * @param key      - cipher key
-	 */
+	// SaveCipherKey caches a symmetric cipher key for reuse in directional message encryption
+	//
+	// Stores the key associated with the sender→receiver direction to avoid re-negotiation
+	//
+	// Parameters:
+	//   - sender   - ID of the message sender (user/contact ID)
+	//   - receiver - ID of the message receiver (user/contact/group ID)
+	//   - key      - SymmetricKey to cache for future encryption use
+	// Returns: true if key saved successfully, false on database error
 	SaveCipherKey(sender, receiver ID, key SymmetricKey) bool
 }
 
+// GroupKeysDBI defines the interface for group message key persistence operations
+//
+// # Manages storage and retrieval of encrypted symmetric keys for group message communication
+//
+// Each group member may have unique encoded keys for secure group messaging
 type GroupKeysDBI interface {
 
-	/**
-	 *  Get encrypted message keys for group
-	 *
-	 * @param group  - group ID
-	 * @param sender - member ID
-	 * @return encoded message keys
-	 */
-	GetGroupKeys(group, sender ID) SymmetricKeyHelper
+	// GetGroupKeys retrieves the encoded symmetric message keys for a specific group and sender
+	//
+	// Returns a StringKeyMap containing key-value pairs of encoded group message keys
+	//
+	// Parameters:
+	//   - group  - ID of the group the keys apply to
+	//   - sender - ID of the group member (sender) associated with the keys
+	// Returns: StringKeyMap with encoded group keys (nil/empty map if no keys found)
+	GetGroupKeys(group, sender ID) StringKeyMap
 
-	/**
-	 *  Save encrypted message keys for group
-	 *
-	 * @param group  - group ID
-	 * @param sender - member ID
-	 * @param keys   - encoded message keys
-	 * @return true on success
-	 */
+	// SaveGroupKeys persists encoded symmetric message keys for a specific group and sender
+	//
+	// Stores keys in StringKeyMap format (key-value pairs of encoded key data)
+	//
+	// Parameters:
+	//   - group  - ID of the group the keys apply to
+	//   - sender - ID of the group member (sender) associated with the keys
+	//   - keys   - StringKeyMap containing encoded group message keys
+	// Returns: true if keys saved successfully, false on database error
 	SaveGroupKeys(group, sender ID, keys StringKeyMap) bool
 }
 

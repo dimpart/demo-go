@@ -35,9 +35,11 @@ type IFrequencyChecker[K comparable] interface {
 	IsExpired(key K, now Time, force bool) bool
 }
 
-/**
- *  Frequency checker for duplicated queries
- */
+// FrequencyChecker provides thread-safe frequency control for duplicate query prevention
+//
+// Generic type K: Comparable key type (e.g., ID, string) to track query identifiers
+//
+// Core functionality: Tracks when each key was last used to prevent duplicate/too-frequent queries
 type FrequencyChecker[K comparable] struct {
 	//IFrequencyChecker
 

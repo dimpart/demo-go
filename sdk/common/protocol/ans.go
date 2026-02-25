@@ -1,6 +1,6 @@
 /* license: https://mit-license.org
  *
- *  DIM-SDK : Decentralized Instant Messaging Software Development Kit
+ *  DIMP : Decentralized Instant Messaging Protocol
  *
  *                                Written in 2021 by Moky <albert.moky@gmail.com>
  *
@@ -68,29 +68,29 @@ var KEYWORDS = [...]string{
 	"root", "supervisor",
 }
 
+// AddressNameService defines the interface for managing alias-to-ID mappings (address name resolution)
+//
+// Core functionality: Check alias reservation status, resolve names to IDs, and list names for an ID
 type AddressNameService interface {
 
-	/**
-	 *  Check whether the alias is available
-	 *
-	 * @param name - alias
-	 * @return true on reserved
-	 */
+	// IsReserved checks if a given alias name is reserved (unavailable for use)
+	//
+	// Parameters:
+	//   - name - Alias/short name to check for reservation status
+	// Returns: true if the name is reserved (cannot be used), false if available
 	IsReserved(name string) bool
 
-	/**
-	 *  Get ID by short name
-	 *
-	 * @param name - sort name
-	 * @return user ID
-	 */
+	// GetID resolves a short name/alias to its corresponding user ID
+	//
+	// Parameters:
+	//   - name - Short name/alias to resolve (must be non-reserved and registered)
+	// Returns: User ID associated with the name (zero value if name not found)
 	GetID(name string) ID
 
-	/**
-	 *  Get all short names with the same ID
-	 *
-	 * @param identifier - user ID
-	 * @return short name list
-	 */
-	GetNames(identifier ID) []string
+	// GetNames retrieves all short names/aliases associated with a specific user ID
+	//
+	// Parameters:
+	//   - did - User ID to look up associated names
+	// Returns: Slice of short names/aliases linked to the ID (empty slice if no names exist)
+	GetNames(did ID) []string
 }

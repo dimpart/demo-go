@@ -40,7 +40,6 @@ import (
 /**
  *  Handshake command message
  *
- *  <blockquote><pre>
  *  data format: {
  *      type : 0x88,
  *      sn   : 123,
@@ -49,8 +48,8 @@ import (
  *      title   : "Hello world!", // "DIM?", "DIM!"
  *      session : "{SESSION_KEY}" // session key
  *  }
- *  </pre></blockquote>
  */
+
 func NewHandshakeCommand(title, sessionKey string) HandshakeCommand {
 	return NewBaseHandshakeCommand(nil, title, sessionKey)
 }
@@ -62,7 +61,6 @@ func NewHandshakeCommandWithMap(dict StringKeyMap) Command {
 /**
  *  Login Command
  *
- *  <blockquote><pre>
  *  data format: {
  *      type : 0x88,
  *      sn   : 123,
@@ -83,8 +81,8 @@ func NewHandshakeCommandWithMap(dict StringKeyMap) Command {
  *          did  : "{SP_ID}"
  *      }
  *  }
- *  </pre></blockquote>
  */
+
 func NewLoginCommand(did ID) LoginCommand {
 	return NewBaseLoginCommand(nil, did)
 }
@@ -96,7 +94,6 @@ func NewLoginCommandWithMap(dict StringKeyMap) Command {
 /**
  *  Mute Command
  *
- *  <blockquote><pre>
  *  data format: {
  *      type : 0x88,
  *      sn   : 123,
@@ -104,8 +101,8 @@ func NewLoginCommandWithMap(dict StringKeyMap) Command {
  *      command : "mute",
  *      list    : []      // mute-list
  *  }
- *  </pre></blockquote>
  */
+
 func NewMuteCommand(list []ID) MuteCommand {
 	return NewBaseMuteCommand(nil, list)
 }
@@ -117,7 +114,6 @@ func NewMuteCommandWithMap(dict StringKeyMap) Command {
 /**
  *  Block Command
  *
- *  <blockquote><pre>
  *  data format: {
  *      type : 0x88,
  *      sn   : 123,
@@ -125,8 +121,8 @@ func NewMuteCommandWithMap(dict StringKeyMap) Command {
  *      command : "block",
  *      list    : []      // block-list
  *  }
- *  </pre></blockquote>
  */
+
 func NewBlockCommand(list []ID) BlockCommand {
 	return NewBaseBlockCommand(nil, list)
 }
@@ -138,7 +134,6 @@ func NewBlockCommandWithMap(dict StringKeyMap) Command {
 /**
  *  Report Command
  *
- *  <blockquote><pre>
  *  data format: {
  *      type : 0x88,
  *      sn   : 123,
@@ -148,8 +143,8 @@ func NewBlockCommandWithMap(dict StringKeyMap) Command {
  *      //---- extra info
  *      time    : 1234567890,    // timestamp
  *  }
- *  </pre></blockquote>
  */
+
 func NewReportCommand(title string) ReportCommand {
 	return NewBaseReportCommand(nil, title)
 }

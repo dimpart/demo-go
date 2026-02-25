@@ -1,6 +1,6 @@
 /* license: https://mit-license.org
  *
- *  DIM-SDK : Decentralized Instant Messaging Software Development Kit
+ *  DIMP : Decentralized Instant Messaging Protocol
  *
  *                                Written in 2021 by Moky <albert.moky@gmail.com>
  *
@@ -38,61 +38,59 @@ import (
 
 const LOGIN = "login"
 
-/**
- *  Login Command
- *
- *  <blockquote><pre>
- *  data format: {
- *      type : 0x88,
- *      sn   : 123,
- *
- *      command  : "login",
- *      time     : 0,
- *      //---- client info ----
- *      did      : "{UserID}",
- *      device   : "DeviceID",  // (optional)
- *      agent    : "UserAgent", // (optional)
- *      //---- server info ----
- *      station  : {
- *          did  : "{StationID}",
- *          host : "{IP}",
- *          port : 9394
- *      },
- *      provider : {
- *          did  : "{SP_ID}"
- *      }
- *  }
- *  </pre></blockquote>
- */
+// LoginCommand defines the interface for user login commands in the DIM network
+//
+// # Implements the Command interface for authentication and session setup
+//
+//	Data Format: {
+//	    "type": 0x88,
+//	    "sn": 123,
+//
+//	    "command": "login",
+//	    "time": 0,
+//	    //---- client info ----
+//	    "did": "{UserID}",
+//	    "device": "DeviceID",      // Device identifier (optional)
+//	    "agent": "UserAgent",      // Client user agent (optional, e.g., "DIM-Client/1.0")
+//	    //---- server info ----
+//	    "station": {
+//	        "did": "{StationID}",
+//	        "host": "{IP}",
+//	        "port": 9394
+//	    },
+//	    "provider": {
+//	        "did": "{SP_ID}"
+//	    }
+//	}
 type LoginCommand interface {
 	Command
 
-	/**
-	 *  User ID
-	 */
+	// ID returns the user's unique identifier (did field)
+	//
+	// Returns: User ID associated with the login request
 	ID() ID
 
-	/**
-	 *  Device ID
-	 */
+	// Device returns the client device identifier (optional field)
+	//
+	// Returns: Device ID string (empty string if not set)
 	Device() string
 	SetDevice(device string)
 
-	/**
-	 *  User Agent
-	 */
+	// Agent returns the client user agent string (optional field)
+	//
+	// Returns: User agent string (empty string if not set)
 	Agent() string
 	SetAgent(agent string)
 
-	/**
-	 *  DIM Network Station
-	 */
+	// StationInfo returns the DIM network station information
+	//
+	// Returns: StringKeyMap containing station did, host, and port
 	StationInfo() StringKeyMap
 	SetStationInfo(station StringKeyMap)
 
-	/**
-	 *  DIM Network Service Provider
-	 */
+	// ProviderInfo returns the DIM network service provider information
+	//
+	// Returns: StringKeyMap containing provider did
 	ProviderInfo() StringKeyMap
 	SetProviderInfo(sp StringKeyMap)
 }

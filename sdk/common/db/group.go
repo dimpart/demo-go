@@ -1,28 +1,3 @@
-/* license: https://mit-license.org
- * ==============================================================================
- * The MIT License (MIT)
- *
- * Copyright (c) 2021 Albert Moky
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- * ==============================================================================
- */
 package db
 
 import (
@@ -32,86 +7,122 @@ import (
 	. "github.com/dimpart/demo-go/sdk/utils"
 )
 
+// GroupDBI defines the interface for group core information persistence operations
+//
+// Manages storage and retrieval of group ownership, membership, and administrator data
 type GroupDBI interface {
 
-	/**
-	 *  Get group founder/owner from DB
-	 */
+	// GetFounder retrieves the founder (creator) ID of a specific group
+	//
+	// The founder is the original creator of the group (immutable)
+	//
+	// Parameters:
+	//   - group - Group ID to retrieve founder for
+	// Returns: Founder's user ID (nil/zero value if group not found)
 	GetFounder(group ID) ID
+
+	// GetOwner retrieves the current owner ID of a specific group
+	//
+	// The owner may change (e.g., transfer ownership) unlike the founder
+	//
+	// Parameters:
+	//   - group - Group ID to retrieve owner for
+	// Returns: Current group owner's user ID (nil/zero value if group not found)
 	GetOwner(group ID) ID
 
-	/**
-	 *  Get group members from DB
-	 */
+	// GetMembers retrieves the full list of members for a specific group
+	//
+	// Returns all regular members (excludes administrators unless they are also regular members)
+	//
+	// Parameters:
+	//   - group - Group ID to retrieve members for
+	// Returns: Slice of member user IDs (empty slice if no members or group not found)
 	GetMembers(group ID) []ID
+
+	// SaveMembers overwrites the full member list for a specific group
+	//
+	// Replaces the entire member list (not incremental update/addition)
+	//
+	// Parameters:
+	//   - members - Slice of user IDs to set as group members
+	//   - group   - Group ID to associate with the member list
+	// Returns: true if member list saved successfully, false on database error
 	SaveMembers(members []ID, group ID) bool
 
-	/**
-	 *  Get group admins from DB
-	 */
+	// GetAdministrators retrieves the list of administrators for a specific group
+	//
+	// Administrators have elevated permissions for group management
+	//
+	// Parameters:
+	//   - group - Group ID to retrieve administrators for
+	// Returns: Slice of admin user IDs (empty slice if no admins or group not found)
 	GetAdministrators(group ID) []ID
+
+	// SaveAdministrators overwrites the administrator list for a specific group
+	//
+	// Replaces the entire admin list (not incremental update/addition)
+	//
+	// Parameters:
+	//   - members - Slice of user IDs to set as group administrators
+	//   - group   - Group ID to associate with the admin list
+	// Returns: true if admin list saved successfully, false on database error
 	SaveAdministrators(members []ID, group ID) bool
 }
 
+// GroupHistoryDBI defines the interface for group command history persistence operations
+//
+// Manages storage, retrieval, and cleanup of group operation commands (invite, join, reset, etc.)
 type GroupHistoryDBI interface {
 
-	/**
-	 *  Save group commands
-	 *      1. invite
-	 *      2. expel (deprecated)
-	 *      3. join
-	 *      4. quit
-	 *      5. reset
-	 *      6. resign
-	 *
-	 * @param content - group command
-	 * @param rMsg    - group command message
-	 * @param group   - group ID
-	 * @return false on failed
-	 */
+	// SaveGroupHistory persists a group operation command and its associated reliable message
+	//
+	// Supported command types:
+	//   1. invite   - Invite users to group
+	//   2. expel    - Remove users from group (deprecated)
+	//   3. join     - User joins group
+	//   4. quit     - User leaves group
+	//   5. reset    - Reset group membership
+	//   6. resign   - Admin resigns from position
+	// Parameters:
+	//   - content - GroupCommand instance representing the operation
+	//   - rMsg    - ReliableMessage associated with the command (for traceability)
+	//   - group   - Group ID the command applies to
+	// Returns: true if history saved successfully, false on database error
 	SaveGroupHistory(content GroupCommand, rMsg ReliableMessage, group ID) bool
 
-	/**
-	 *  Load group commands
-	 *      1. invite
-	 *      2. expel (deprecated)
-	 *      3. join
-	 *      4. quit
-	 *      5. reset
-	 *      6. resign
-	 *
-	 * @param group - group ID
-	 * @return history list
-	 */
+	// GetGroupHistories retrieves all command history for a specific group
+	//
+	// Returns all supported command types (invite, expel, join, quit, reset, resign)
+	//
+	// Parameters:
+	//   - group - Group ID to retrieve command history for
+	// Returns: Slice of Pair[GroupCommand, ReliableMessage] (empty slice if no history)
 	GetGroupHistories(group ID) []Pair[GroupCommand, ReliableMessage]
 
-	/**
-	 *  Load last 'reset' group command
-	 *
-	 * @param group - group ID
-	 * @return reset command message
-	 */
+	// GetResetCommandMessage retrieves the most recent 'reset' command for a specific group
+	//
+	// The reset command typically resets group configuration or membership
+	//
+	// Parameters:
+	//   - group - Group ID to retrieve reset command for
+	// Returns: Pair[ResetCommand, ReliableMessage] (zero value Pair if no reset command found)
 	GetResetCommandMessage(group ID) Pair[ResetCommand, ReliableMessage]
 
-	/**
-	 *  Clean group commands for members:
-	 *      1. invite
-	 *      2. expel (deprecated)
-	 *      3. join
-	 *      4. quit
-	 *      5. reset
-	 *
-	 * @param group - group ID
-	 * @return false on failed
-	 */
+	// ClearGroupMemberHistories deletes member-related command history for a specific group
+	//
+	// Removes history for: invite, expel (deprecated), join, quit, reset commands
+	//
+	// Parameters:
+	//   - group - Group ID to clear member history for
+	// Returns: true if history cleared successfully, false on database error
 	ClearGroupMemberHistories(group ID) bool
 
-	/**
-	 *  Clean group commands for administrators
-	 *      1. resign
-	 *
-	 * @param group - group ID
-	 * @return false on failed
-	 */
+	// ClearGroupAdminHistories deletes administrator-related command history for a specific group
+	//
+	// Removes history for: resign commands (admin resignation)
+	//
+	// Parameters:
+	//   - group - Group ID to clear admin history for
+	// Returns: true if history cleared successfully, false on database error
 	ClearGroupAdminHistories(group ID) bool
 }

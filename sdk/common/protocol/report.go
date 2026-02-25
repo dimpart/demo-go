@@ -1,4 +1,9 @@
 /* license: https://mit-license.org
+ *
+ *  DIMP : Decentralized Instant Messaging Protocol
+ *
+ *                                Written in 2021 by Moky <albert.moky@gmail.com>
+ *
  * ==============================================================================
  * The MIT License (MIT)
  *
@@ -33,24 +38,22 @@ const (
 	OFFLINE = "offline"
 )
 
-/**
- *  Report Command
- *
- *  <blockquote><pre>
- *  data format: {
- *      type : 0x88,
- *      sn   : 123,
- *
- *      command : "report",
- *      title   : "online",      // or "offline"
- *      //---- extra info
- *      time    : 1234567890,    // timestamp
- *  }
- *  </pre></blockquote>
- */
+// ReportCommand defines the interface for status reporting commands (online/offline)
+//
+// # Implements the Command interface for DIM network presence updates
+//
+//	Data Format: {
+//	    "type": 0x88,
+//	    "sn": 123,
+//
+//	    "command": "report",
+//	    "title": "online",     // Status indicator ("online" or "offline")
+//	    "time": 1234567890     // Status timestamp (Unix epoch seconds)
+//	}
 type ReportCommand interface {
 	Command
 
+	// Title returns the status indicator (e.g., "online", "offline")
 	Title() string
 	SetTitle(title string)
 }

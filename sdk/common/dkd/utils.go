@@ -42,10 +42,10 @@ import (
 
 /**
  *  Sender's Meta
- *  <p>
- *      Extends for the first message package of 'Handshake' protocol.
- *  </p>
+ *  ~~~~~~~~~~~~~
+ *  Extends for the first message package of 'Handshake' protocol.
  */
+
 func GetMetaAttachment(msg Message) Meta {
 	meta := msg.Get("meta")
 	return ParseMeta(meta)
@@ -57,10 +57,10 @@ func SetMetaAttachment(meta Meta, msg Message) {
 
 /**
  *  Sender's Visa
- *  <p>
- *      Extends for the first message package of 'Handshake' protocol.
- *  </p>
+ *  ~~~~~~~~~~~~~
+ *  Extends for the first message package of 'Handshake' protocol.
  */
+
 func GetVisaAttachment(msg Message) Visa {
 	doc := msg.Get("visa")
 	if visa, ok := doc.(Visa); ok {

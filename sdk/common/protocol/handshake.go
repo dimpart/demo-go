@@ -1,6 +1,6 @@
 /* license: https://mit-license.org
  *
- *  DIM-SDK : Decentralized Instant Messaging Software Development Kit
+ *  DIMP : Decentralized Instant Messaging Protocol
  *
  *                                Written in 2021 by Moky <albert.moky@gmail.com>
  *
@@ -65,26 +65,33 @@ func (state HandshakeState) String() string {
 
 const HANDSHAKE = "handshake"
 
-/**
- *  Handshake command message
- *
- *  <blockquote><pre>
- *  data format: {
- *      type : 0x88,
- *      sn   : 123,
- *
- *      command : "handshake",    // command name
- *      title   : "Hello world!", // "DIM?", "DIM!"
- *      session : "{SESSION_KEY}" // session key
- *  }
- *  </pre></blockquote>
- */
+// HandshakeCommand defines the interface for handshake commands (session initialization)
+//
+// # Implements the Command interface for DIM network session establishment
+//
+//	Data Format: {
+//	    "type": 0x88,
+//	    "sn": 123,
+//
+//	    "command": "handshake",
+//	    "title": "Hello world!",   // Handshake state indicator ("DIM?", "DIM!")
+//	    "session": "{SESSION_KEY}" // Session key for authenticated communication
+//	}
 type HandshakeCommand interface {
 	Command
 
+	// Title returns the handshake state indicator (e.g., "DIM?", "DIM!")
+	//
+	// Returns: String representing the current handshake state
 	Title() string
 
+	// SessionKey returns the session key for authenticated communication
+	//
+	// Returns: Session key string (empty string if not established)
 	SessionKey() string
 
+	// State returns the structured HandshakeState derived from the title
+	//
+	// Returns: Enumerated HandshakeState value
 	State() HandshakeState
 }

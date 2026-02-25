@@ -1,28 +1,3 @@
-/* license: https://mit-license.org
- * ==============================================================================
- * The MIT License (MIT)
- *
- * Copyright (c) 2021 Albert Moky
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- * ==============================================================================
- */
 package db
 
 import (
@@ -32,22 +7,29 @@ import (
 	. "github.com/dimpart/demo-go/sdk/utils"
 )
 
+// LoginDBI defines the interface for user login history persistence operations
+//
+// Manages storage and retrieval of the most recent login command/message for user authentication
 type LoginDBI interface {
 
-	/**
-	 *  Get last login command/message for user
-	 *
-	 * @param user - user ID
-	 * @return LoginCommand, ReliableMessage
-	 */
+	// GetLoginCommandMessage retrieves the last login command and associated reliable message for a user
+	//
+	// Used to verify recent login activity and session state
+	//
+	// Parameters:
+	//   - user - ID of the user to retrieve login history for
+	// Returns: Pair[LoginCommand, ReliableMessage] containing last login data (zero-value Pair if no login found)
 	GetLoginCommandMessage(user ID) Pair[LoginCommand, ReliableMessage]
 
-	/**
-	 *  Save last login command for user
-	 *
-	 * @param command - login command with user ID
-	 * @return false on failed
-	 */
+	// SaveLoginCommandMessage persists the last login command and associated reliable message for a user
+	//
+	// Overwrites existing login data (only stores the most recent login)
+	//
+	// Parameters:
+	//   - user    - ID of the user associated with the login
+	//   - content - LoginCommand containing login details (device, agent, station info)
+	//   - rMsg    - ReliableMessage associated with the login command (for traceability)
+	// Returns: true if login data saved successfully, false on database error
 	SaveLoginCommandMessage(user ID, content LoginCommand, rMsg ReliableMessage) bool
 }
 

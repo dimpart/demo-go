@@ -41,19 +41,23 @@ import (
 	. "github.com/dimpart/demo-go/sdk/utils"
 )
 
-//
-//  Meta Utils
-//
+// -------------------------------------------------------------------------
+//  Meta Utility Functions
+// -------------------------------------------------------------------------
 
-/**
- *  Check whether meta matches with entity ID
- *  <p>
- *      (must call this when received a new meta from network)
- *  </p>
- *
- * @param did - entity ID
- * @return true on matched
- */
+// MetaMatchID verifies if a Meta instance matches a given entity ID (DID)
+//
+// # Critical validation step: MUST be called when receiving new Meta from the network
+//
+// Validation logic:
+//  1. Compares Meta.Seed() (name) with ID.Name()
+//  2. Generates address from Meta (using ID's network) and compares with ID.Address()
+//
+// Parameters:
+//   - did  - Entity ID (DID) to validate against the Meta
+//   - meta - Meta instance to validate (typically received from network)
+//
+// Returns: true if Meta matches the ID (name and address are consistent), false otherwise
 func MetaMatchID(did ID, meta Meta) bool {
 	// check ID.name
 	seed := meta.Seed()
@@ -67,12 +71,19 @@ func MetaMatchID(did ID, meta Meta) bool {
 	return old.Equal(gen)
 }
 
-/**
- *  Check whether meta matches with public key
- *
- * @param pKey - public key
- * @return true on matched
- */
+// MetaMatchPublicKey verifies if a Meta instance matches a given public key
+//
+// Performs two-level validation for maximum compatibility:
+//  1. Direct comparison of Meta.PublicKey() with the provided VerifyKey
+//  2. Signature verification (Meta.Fingerprint() signs Meta.Seed()) for legacy/compatibility support
+//
+// Special Case: BTC/ETH addresses have no seed (name) - only direct key comparison is performed
+//
+// Parameters:
+//   - pKey - Public key (VerifyKey) to validate against the Meta
+//   - meta - Meta instance to validate
+//
+// Returns: true if Meta matches the public key (either direct match or valid signature), false otherwise
 func MetaMatchPublicKey(pKey VerifyKey, meta Meta) bool {
 	// check whether the public key equals to meta.key
 	if meta.PublicKey().Equal(pKey) {
@@ -96,23 +107,45 @@ func MetaMatchPublicKey(pKey VerifyKey, meta Meta) bool {
 	return pKey.Verify(data, sig)
 }
 
-//
-//  Document Utils
-//
+// -------------------------------------------------------------------------
+//  Document Utility Functions
+// -------------------------------------------------------------------------
 
+// GetDocumentID retrieves the unique identifier for a Document
+//
+// # Delegates to GeneralAccountHelper for consistent ID generation across document types
+//
+// Parameters:
+//   - doc - Document instance to get ID for
+//
+// Returns: Unique ID associated with the document (zero value if doc is nil)
 func GetDocumentID(doc Document) ID {
 	helper := GetGeneralAccountHelper()
 	return helper.GetDocumentID(doc.Map())
 }
 
+// GetDocumentType retrieves the type identifier for a Document
+//
+// # Delegates to GeneralAccountHelper with empty default type fallback
+//
+// Parameters:
+//   - doc - Document instance to get type for
+//
+// Returns: Document type string (empty string if type not found or doc is nil)
 func GetDocumentType(doc Document) string {
 	helper := GetGeneralAccountHelper()
 	return helper.GetDocumentType(doc.Map(), "")
 }
 
-/**
- *  Check whether this time is before old time
- */
+// DocumentTimeIsBefore checks if a timestamp is chronologically before another
+//
+// # Handles nil/empty Time values safely (returns false if either time is nil)
+//
+// Parameters:
+//   - oldTime  - Reference timestamp to compare against
+//   - thisTime - Timestamp to check (if it is before oldTime)
+//
+// Returns: true if thisTime is before oldTime (and both are non-nil), false otherwise
 func DocumentTimeIsBefore(oldTime, thisTime Time) bool {
 	if TimeIsNil(oldTime) || TimeIsNil(thisTime) {
 		return false
@@ -120,18 +153,30 @@ func DocumentTimeIsBefore(oldTime, thisTime Time) bool {
 	return TimeIsBefore(oldTime, thisTime)
 }
 
-/**
- *  Check whether this document's time is before old document's time
- */
+// DocumentIsExpired checks if a document is expired relative to another (by timestamp)
+//
+// # A document is considered expired if its timestamp is before the reference document's timestamp
+//
+// Parameters:
+//   - thisDoc - Document to check for expiration
+//   - oldDoc  - Reference document (typically the latest valid document)
+//
+// Returns: true if thisDoc is expired (older than oldDoc), false otherwise
 func DocumentIsExpired(thisDoc, oldDoc Document) bool {
 	oldTime := oldDoc.Time()
 	thisTime := thisDoc.Time()
 	return DocumentTimeIsBefore(oldTime, thisTime)
 }
 
-/**
- *  Select last document matched the type
- */
+// GetLastDocument retrieves the most recent document of a specified type from a list
+//
+// # Filters documents by type (supports "*" for all types) and selects the latest by timestamp
+//
+// Parameters:
+//   - documents - Slice of Document instances to filter and sort
+//   - docType   - Target document type (use "*" or empty string for all types)
+//
+// Returns: Most recent Document matching the type (nil if no matching documents)
 func GetLastDocument(documents []Document, docType string) Document {
 	if documents == nil {
 		return nil
@@ -164,9 +209,14 @@ func GetLastDocument(documents []Document, docType string) Document {
 	return lastDoc
 }
 
-/**
- *  Select last visa document
- */
+// GetLastVisa retrieves the most recent Visa document from a list
+//
+// # Filters documents by type (Visa interface) and selects the latest by timestamp
+//
+// Parameters:
+//   - documents - Slice of Document instances to filter for Visa documents
+//
+// Returns: Most recent Visa document (nil if no Visa documents found)
 func GetLastVisa(documents []Document) Visa {
 	if documents == nil {
 		return nil
@@ -192,9 +242,14 @@ func GetLastVisa(documents []Document) Visa {
 	return lastVisa
 }
 
-/**
- *  Select last bulletin document
- */
+// GetLastBulletin retrieves the most recent Bulletin document from a list
+//
+// # Filters documents by type (Bulletin interface) and selects the latest by timestamp
+//
+// Parameters:
+//   - documents - Slice of Document instances to filter for Bulletin documents
+//
+// Returns: Most recent Bulletin document (nil if no Bulletin documents found)
 func GetLastBulletin(documents []Document) Bulletin {
 	if documents == nil {
 		return nil

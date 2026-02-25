@@ -47,6 +47,7 @@ func NewCompatibleAddressFactory() AddressFactory {
 /**
  *  Compatible Address Factory
  */
+
 type compatibleAddressFactory struct {
 	//AddressFactory
 }
@@ -121,8 +122,8 @@ func parseAddress(str string) Address {
 
 /**
  *  Unsupported Address
- *  ~~~~~~~~~~~~~~~~~~~
  */
+
 type UnknownAddress struct {
 	//Address
 	ConstantString

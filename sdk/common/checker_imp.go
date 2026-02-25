@@ -1,4 +1,4 @@
-package dimp
+package sdk
 
 import (
 	. "github.com/dimchat/core-go/protocol"

@@ -1,4 +1,4 @@
-package dimp
+package sdk
 
 import (
 	. "github.com/dimchat/mkm-go/protocol"

@@ -10,7 +10,6 @@ import (
 
 /**
  *  Extensions Loader
- *  ~~~~~~~~~~~~~~~~~
  */
 
 type CommonExtensionLoader struct {
@@ -31,6 +30,7 @@ func (loader CommonExtensionLoader) Load() {
 /**
  *  Core content factories
  */
+
 func registerContentFactories() {
 
 	// Text
@@ -82,6 +82,7 @@ func registerContentFactories() {
 /**
  *  Customized content factories
  */
+
 func registerCustomizedFactories() {
 
 	// Application Customized Content
@@ -102,6 +103,7 @@ func copyContentFactory(msgType, alias string) {
 /**
  *  Core command factories
  */
+
 func registerCommandFactories() {
 
 	// Handshake

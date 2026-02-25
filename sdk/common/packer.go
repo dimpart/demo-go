@@ -1,29 +1,4 @@
-/* license: https://mit-license.org
- * ==============================================================================
- * The MIT License (MIT)
- *
- * Copyright (c) 2021 Albert Moky
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- * ==============================================================================
- */
-package dimp
+package sdk
 
 import (
 	. "github.com/dimchat/dkd-go/protocol"
@@ -36,61 +11,85 @@ import (
 	. "github.com/dimpart/demo-go/sdk/common/mkm"
 )
 
+// ICommonMessagePacker defines the interface for common message packing/validation
+//
+// Extends Packer with sender/receiver validation and attachment checks
+//
+// Ensures messages are properly encrypted/signed before transmission
 type ICommonMessagePacker interface {
 	Packer
 
-	// for checking whether user's ready
+	// GetVisaKey retrieves the encryption key from a user's Visa document
+	//
+	// Used to check if a user is ready for encrypted communication
+	//
+	// Parameters:
+	//   - user - User ID to retrieve Visa encryption key for
+	// Returns: EncryptKey (nil if user's Visa key not found)
 	GetVisaKey(user ID) EncryptKey
 
-	/**
-	 *  Check sender before verifying received message
-	 *
-	 * @param rMsg - network message
-	 * @return false on verify key not found
-	 */
+	// CheckSender validates the sender before verifying a received message
+	//
+	// Verifies sender identity and retrieves necessary verification keys
+	//
+	// Parameters:
+	//   - rMsg - Received reliable message to validate sender for
+	// Returns: true if sender is valid (verify key found), false if verify key missing/invalid
 	CheckSender(rMsg ReliableMessage) bool
 
-	/**
-	 *  Check receiver before encrypting message
-	 *
-	 * @param iMsg - plain message
-	 * @return false on encrypt key not found
-	 */
+	// CheckReceiver validates the receiver before encrypting an outbound message
+	//
+	// Verifies receiver identity and retrieves necessary encryption keys
+	//
+	// Parameters:
+	//   - iMsg - Outbound instant message to validate receiver for
+	// Returns: true if receiver is valid (encrypt key found), false if encrypt key missing/invalid
 	CheckReceiver(iMsg InstantMessage) bool
 
-	/**
-	 *  Check meta &amp; visa
-	 *
-	 * @param rMsg - received message
-	 * @return false on error
-	 */
+	// CheckAttachments validates Meta and Visa attachments in a received message
+	//
+	// Ensures attached metadata and identity documents are valid and unmodified
+	//
+	// Parameters:
+	//   - rMsg - Received reliable message to check attachments for
+	// Returns: true if attachments are valid, false on validation error
 	CheckAttachments(rMsg ReliableMessage) bool
 }
 
+// IMessageWaitingQueue defines the interface for message queuing during validation delays
+//
+// Manages suspended messages waiting for sender/receiver Visa documents
 type IMessageWaitingQueue interface {
 
-	/**
-	 *  Add income message in a queue for waiting sender's visa
-	 *
-	 * @param rMsg - incoming message
-	 * @param info - error info
-	 */
+	// SuspendReliableMessage adds an incoming message to queue waiting for sender's Visa
+	//
+	// Used when sender's Visa is missing/invalid (message held until Visa is available)
+	//
+	// Parameters:
+	//   - rMsg - Incoming reliable message to suspend
+	//   - info - StringKeyMap containing error/queue metadata (why message was suspended)
 	SuspendReliableMessage(rMsg ReliableMessage, info StringKeyMap)
 
-	/**
-	 *  Add outgo message in a queue for waiting receiver's visa
-	 *
-	 * @param iMsg - outgo message
-	 * @param info - error info
-	 */
+	// SuspendInstantMessage adds an outbound message to queue waiting for receiver's Visa
+	//
+	// Used when receiver's Visa is missing/invalid (message held until Visa is available)
+	//
+	// Parameters:
+	//   - iMsg - Outbound instant message to suspend
+	//   - info - StringKeyMap containing error/queue metadata (why message was suspended)
 	SuspendInstantMessage(iMsg InstantMessage, info StringKeyMap)
 }
 
+// CommonMessagePacker implements the ICommonMessagePacker interface
+//
+// Wraps MessagePacker and integrates with IMessageWaitingQueue for suspended messages
 type CommonMessagePacker struct {
 	//ICommonMessagePacker
 	*MessagePacker
 
-	// protected
+	// Queue manages suspended messages waiting for Visa validation
+	//
+	// Protected field: Should not be accessed directly by external packages
 	Queue IMessageWaitingQueue
 }
 

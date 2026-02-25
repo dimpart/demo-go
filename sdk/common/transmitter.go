@@ -1,29 +1,4 @@
-/* license: https://mit-license.org
- * ==============================================================================
- * The MIT License (MIT)
- *
- * Copyright (c) 2021 Albert Moky
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- * ==============================================================================
- */
-package dimp
+package sdk
 
 import (
 	. "github.com/dimchat/core-go/protocol"
@@ -34,38 +9,49 @@ import (
 	. "github.com/dimpart/demo-go/sdk/utils"
 )
 
+// Transmitter defines the interface for sending messages with priority-based delivery
+//
+// Core capabilities: Send message content, instant messages, and reliable messages
+//
+// Priority Rule: Smaller integer values indicate higher delivery priority (faster transmission)
 type Transmitter interface {
 
-	/**
-	 *  Send content from sender to receiver with priority
-	 *
-	 * @param sender   - from where, null for current user
-	 * @param receiver - to where
-	 * @param content  - message content
-	 * @param priority - smaller is faster
-	 * @return (iMsg, None) on error
-	 */
+	// SendContent constructs and sends a message from sender to receiver with specified priority
+	//
+	// Creates both InstantMessage (plain content) and ReliableMessage (encrypted/signed)
+	//
+	// Parameters:
+	//   - content  - Message content to send (core payload)
+	//   - sender   - ID of the message sender (nil/zero value for current user)
+	//   - receiver - ID of the message receiver (user/group/bot)
+	//   - priority - Delivery priority (smaller = faster)
+	// Returns: Pair[InstantMessage, ReliableMessage] (zero-value Pair if sending fails)
 	SendContent(content Content, sender, receiver ID, priority int) Pair[InstantMessage, ReliableMessage]
 
-	/**
-	 *  Send instant message with priority
-	 *
-	 * @param iMsg     - plain message
-	 * @param priority - smaller is faster
-	 * @return null on error
-	 */
+	// SendInstantMessage sends a plaintext instant message with specified priority
+	//
+	// Converts the plain InstantMessage to a ReliableMessage for network transmission
+	//
+	// Parameters:
+	//   - iMsg     - Plaintext instant message to send
+	//   - priority - Delivery priority (smaller = faster)
+	// Returns: ReliableMessage (nil if sending fails)
 	SendInstantMessage(iMsg InstantMessage, priority int) ReliableMessage
 
-	/**
-	 *  Send reliable message with priority
-	 *
-	 * @param rMsg     - encrypted &amp; signed message
-	 * @param priority - smaller is faster
-	 * @return false on error
-	 */
+	// SendReliableMessage sends an encrypted/signed reliable message with specified priority
+	//
+	// ReliableMessage includes encryption, signature, and delivery guarantees
+	//
+	// Parameters:
+	//   - rMsg     - Encrypted and signed reliable message to send
+	//   - priority - Delivery priority (smaller = faster)
+	// Returns: true if message sent successfully, false on transmission error
 	SendReliableMessage(rMsg ReliableMessage, priority int) bool
 }
 
+// MessageTransmitter implements the Transmitter interface
+//
+// Wraps TwinsHelper to provide message transmission capabilities
 type MessageTransmitter struct {
 	//Transmitter
 	*TwinsHelper

@@ -38,14 +38,12 @@ import (
 
 /**
  *  DIM Station Owner
- *  ~~~~~~~~~~~~~~~~~
  */
+
 type Provider interface {
 	Group
 
-	/**
-	 *  Provider Document
-	 */
+	// Provider Document
 	Profile() Document
 
 	Stations() []StringKeyMap
@@ -59,8 +57,8 @@ func NewProvider(pid ID) Provider {
 
 /**
  *  DIM Station Owner
- *  ~~~~~~~~~~~~~~~~~
  */
+
 type ServiceProvider struct {
 	*BaseGroup
 }

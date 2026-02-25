@@ -1,29 +1,4 @@
-/* license: https://mit-license.org
- * ==============================================================================
- * The MIT License (MIT)
- *
- * Copyright (c) 2026 Albert Moky
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- * ==============================================================================
- */
-package dimp
+package sdk
 
 import (
 	"fmt"
@@ -34,26 +9,40 @@ import (
 	. "github.com/dimpart/demo-go/sdk/common/db"
 )
 
+// SocketAddress defines the interface for network socket address (host + port)
 type SocketAddress interface {
 	fmt.Stringer
 
+	// Host returns the IP/domain name part of the socket address
+	//
+	// Returns: Host string (e.g., "192.168.1.1", "example.com")
 	Host() string
+
+	// Port returns the numeric port part of the socket address
+	//
+	// Returns: Port number as uint16 (e.g., 8080, 9394)
 	Port() uint16
 }
 
+// Session defines the interface for a network communication session
+//
+// Extends Transmitter with session management, database access, and message queuing
 type Session interface {
 	Transmitter
 
+	// GetDatabase retrieves the session-specific database interface
+	//
+	// Returns: SessionDBI instance for session-related data operations
 	GetDatabase() SessionDBI
 
-	/**
-	 *  Get remote socket address
-	 *
-	 * @return host & port
-	 */
+	// GetRemoteAddress retrieves the remote socket address of the session
+	//
+	// Returns: SocketAddress containing remote host and port
 	GetRemoteAddress() SocketAddress
 
-	// session key
+	// GetSessionKey returns the cryptographic session key for secure communication
+	//
+	// Returns: Session key string (empty string if not established)
 	GetSessionKey() string
 
 	/**
@@ -62,26 +51,34 @@ type Session interface {
 	 * @param uid - login user ID
 	 * @return true on changed
 	 */
-	SetID(uid ID) bool
-	GetID() ID
 
-	/**
-	 *  Update active flag
-	 *
-	 * @param active - flag
-	 * @param when   - now
-	 * @return true on changed
-	 */
-	SetActive(active bool, when Time) bool
+	// GetID returns the current user ID associated with the session
+	//
+	// Returns: User ID (nil/zero value if no user logged in)
+	GetID() ID
+	SetID(uid ID) bool
+
+	// IsActive checks if the session is currently active
+	//
+	// Returns: true if session is active, false if inactive
 	IsActive() bool
 
-	/**
-	 *  Pack message into a waiting queue
-	 *
-	 * @param rMsg     - network message
-	 * @param data     - serialized message
-	 * @param priority - smaller is faster
-	 * @return false on error
-	 */
+	// SetActive updates the session's active status and timestamp
+	//
+	// Parameters:
+	//   - active - Active status flag (true = session active, false = inactive)
+	//   - when   - Timestamp (typically current time) of status change
+	// Returns: true if active status was changed, false if no change
+	SetActive(active bool, when Time) bool
+
+	// QueueMessagePackage adds a serialized message to the delivery queue
+	//
+	// Enqueues messages for later transmission (handles rate limiting/backpressure)
+	//
+	// Parameters:
+	//   - rMsg     - ReliableMessage associated with the serialized data
+	//   - data     - Serialized byte array of the message
+	//   - priority - Delivery priority (smaller = faster)
+	// Returns: true if message queued successfully, false on queue error
 	QueueMessagePackage(rMsg ReliableMessage, data []byte, priority int) bool
 }

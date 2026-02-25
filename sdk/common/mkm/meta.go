@@ -49,6 +49,7 @@ func NewCompatibleMetaFactory(version MetaType) MetaFactory {
 /**
  *  Compatible Meta Factory
  */
+
 type compatibleMetaFactory struct {
 	BaseMetaFactory
 }

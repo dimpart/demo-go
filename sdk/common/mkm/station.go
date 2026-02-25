@@ -49,31 +49,21 @@ var (
 
 /**
  *  DIM Server
- *  ~~~~~~~~~~
  */
+
 type Station interface {
 	User
 
-	/**
-	 *  Station Document
-	 */
+	// Station Document
 	Profile() Document
 
-	/**
-	 *  Get provider ID
-	 *
-	 * @return ISP ID, station group
-	 */
+	// Provider ID
 	Provider() ID
 
-	/**
-	 *  Station IP
-	 */
+	// Station IP
 	Host() string
 
-	/**
-	 *  Station Port
-	 */
+	// Station Port
 	Port() uint16
 
 	SetID(sid ID)

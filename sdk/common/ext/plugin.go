@@ -11,8 +11,8 @@ import (
 
 /**
  *  Plugin Loader
- *  ~~~~~~~~~~~~~
  */
+
 type CommonPluginLoader struct {
 	PluginLoader
 }
@@ -48,6 +48,7 @@ func registerDigesters() {
 /**
  *  Address factory
  */
+
 func registerAddressFactory() {
 
 	// Address
@@ -58,6 +59,7 @@ func registerAddressFactory() {
 /**
  *  Meta factories
  */
+
 func registerMetaFactories() {
 	mkm := NewCompatibleMetaFactory(MKM)
 	btc := NewCompatibleMetaFactory(BTC)

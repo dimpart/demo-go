@@ -79,6 +79,14 @@ func registerContentFactories() {
 
 }
 
+func copyContentFactory(msgType, alias string) {
+	factory := GetContentFactory(msgType)
+	if factory == nil {
+		panic("content factory not found:" + msgType)
+	}
+	SetContentFactory(alias, factory)
+}
+
 /**
  *  Customized content factories
  */
@@ -86,18 +94,16 @@ func registerContentFactories() {
 func registerCustomizedFactories() {
 
 	// Application Customized Content
-	copyContentFactory(ContentType.CUSTOMIZED, "customized")
-	copyContentFactory(ContentType.CUSTOMIZED, "application")
-	copyContentFactory(ContentType.CUSTOMIZED, ContentType.APPLICATION)
+	registerContentCreator(ContentType.APPLICATION, NewCustomizedContentWithMap)
+	copyContentFactory(ContentType.APPLICATION, "application")
+	copyContentFactory(ContentType.APPLICATION, "customized")
+	copyContentFactory(ContentType.APPLICATION, ContentType.CUSTOMIZED)
 
 }
 
-func copyContentFactory(msgType, alias string) {
-	factory := GetContentFactory(msgType)
-	if factory == nil {
-		panic("content factory not found:" + msgType)
-	}
-	SetContentFactory(alias, factory)
+func registerContentCreator(msgType string, fn FuncCreateContent) {
+	factory := NewContentFactory(fn)
+	SetContentFactory(msgType, factory)
 }
 
 /**

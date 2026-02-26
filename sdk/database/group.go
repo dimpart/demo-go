@@ -1,28 +1,3 @@
-/* license: https://mit-license.org
- * ==============================================================================
- * The MIT License (MIT)
- *
- * Copyright (c) 2021 Albert Moky
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- * ==============================================================================
- */
 package db
 
 import (
@@ -62,17 +37,17 @@ func (db *Storage) SaveAdministrators(admins []ID, group ID) bool {
 
 // Override
 func (db *Storage) GetMembers(group ID) []ID {
-	arr := db._memberTable[group.String()]
+	arr := db.memberTable[group.String()]
 	if arr == nil {
 		arr = loadMembers(db, group)
-		db._memberTable[group.String()] = arr
+		db.memberTable[group.String()] = arr
 	}
 	return arr
 }
 
 // Override
 func (db *Storage) SaveMembers(members []ID, group ID) bool {
-	db._memberTable[group.String()] = members
+	db.memberTable[group.String()] = members
 	return saveMembers(db, group, members)
 }
 

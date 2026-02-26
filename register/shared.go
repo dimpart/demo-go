@@ -1,7 +1,6 @@
 package main
 
 import (
-	. "github.com/dimchat/sdk-go/sdk"
 	. "github.com/dimpart/demo-go/sdk/client"
 	. "github.com/dimpart/demo-go/sdk/client/ext"
 	. "github.com/dimpart/demo-go/sdk/common"
@@ -11,33 +10,20 @@ import (
 
 var clientFacebook IClientFacebook = nil
 
-func createArchivist(facebook Facebook, adb AccountDBI) ICommonArchivist {
-	archivist := &CommonArchivist{}
-	return archivist.Init(facebook, adb)
-}
-
 func createEntityChecker(adb AccountDBI) IEntityChecker {
 	emitter := &CheckEmitter{}
-	checker := &EntityChecker{}
-	checker.Init(adb)
+	checker := NewEntityChecker(adb)
 	checker.Request = emitter
 	checker.Respond = emitter
 	return checker
 }
 
-func createDatabase() Database {
-	db := &Storage{}
-	return db.Init()
-}
-
 func createFacebook() IClientFacebook {
-	// create database
-	database := createDatabase()
-	// create facebook with database
-	facebook := &ClientFacebook{}
-	facebook.Init(database)
+	// create database for facebook
+	database := NewStorage("/var/dim")
+	facebook := NewClientFacebook(database)
 	// set archivist & barrack
-	archivist := createArchivist(facebook, database)
+	archivist := NewCommonArchivist(facebook, database)
 	facebook.Archivist = archivist
 	facebook.Barrack = archivist
 	// set entity checker
@@ -55,7 +41,6 @@ func SharedFacebook() IClientFacebook {
 }
 
 func init() {
-	lib := &LibraryLoader{}
-	lib.Init(nil, nil)
+	lib := NewLibraryLoader()
 	lib.Run()
 }

@@ -1,29 +1,4 @@
-/* license: https://mit-license.org
- * ==============================================================================
- * The MIT License (MIT)
- *
- * Copyright (c) 2021 Albert Moky
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- * ==============================================================================
- */
-package dimp
+package sdk
 
 import (
 	"math/rand"
@@ -75,7 +50,10 @@ func GenerateUserInfo(nickname string, avatar TransportableFile) *UserInfo {
 	//  Step 4. generate visa document and sign with private key
 	//
 	msgKey := GeneratePrivateKey(RSA)
-	visaKey := msgKey.PublicKey().(EncryptKey)
+	visaKey, ok := msgKey.PublicKey().(EncryptKey)
+	if !ok {
+		panic("message key error")
+	}
 	visa := createVisa(identifier, visaKey, idKey, nickname, avatar)
 	//
 	//  OK
@@ -116,7 +94,10 @@ func GenerateBotInfo(seed string, name string, avatar TransportableFile) *UserIn
 	//
 	//  Step 4. generate visa document and sign with private key
 	//
-	visaKey := privateKey.PublicKey().(EncryptKey)
+	visaKey, ok := privateKey.PublicKey().(EncryptKey)
+	if !ok {
+		panic("private key error")
+	}
 	visa := createVisa(identifier, visaKey, privateKey, name, avatar)
 	//
 	//  OK
@@ -222,20 +203,18 @@ func GenerateGroupInfo(founder *UserInfo, title string, seed string) *GroupInfo 
 //
 
 func createVisa(uid ID, visaKey EncryptKey, idKey SignKey, nickname string, avatar TransportableFile) Visa {
-	doc := &BaseVisa{}
-	if doc.Init() != nil {
-		doc.SetStringer("did", uid)
-		// App ID
-		doc.SetProperty("app_id", "chat.dim.tarsier")
-		// nickname
-		doc.SetName(nickname)
-		// avatar
-		if avatar != nil {
-			doc.SetAvatar(avatar)
-		}
-		// public key
-		doc.SetPublicKey(visaKey)
+	doc := NewBaseVisa(nil, "", nil)
+	doc.SetStringer("did", uid)
+	// App ID
+	doc.SetProperty("app_id", "chat.dim.tarsier")
+	// nickname
+	doc.SetName(nickname)
+	// avatar
+	if avatar != nil {
+		doc.SetAvatar(avatar)
 	}
+	// public key
+	doc.SetPublicKey(visaKey)
 	if idKey != nil {
 		// sign it
 		sig := doc.Sign(idKey)
@@ -248,16 +227,14 @@ func createVisa(uid ID, visaKey EncryptKey, idKey SignKey, nickname string, avat
 }
 
 func createBulletin(gid ID, privateKey SignKey, title string, founder ID) Bulletin {
-	doc := &BaseBulletin{}
-	if doc.Init() != nil {
-		doc.SetStringer("did", gid)
-		// App ID
-		doc.SetProperty("app_id", "chat.dim.tarsier")
-		// group founder
-		doc.SetProperty("founder", founder.String())
-		// group name
-		doc.SetName(title)
-	}
+	doc := NewBaseBulletin(nil, "", nil)
+	doc.SetStringer("did", gid)
+	// App ID
+	doc.SetProperty("app_id", "chat.dim.tarsier")
+	// group founder
+	doc.SetProperty("founder", founder.String())
+	// group name
+	doc.SetName(title)
 	// sign it
 	sig := doc.Sign(privateKey)
 	if sig == nil {

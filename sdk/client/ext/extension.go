@@ -1,7 +1,6 @@
 package ext
 
 import (
-	. "github.com/dimchat/sdk-go/cpu"
 	. "github.com/dimpart/demo-go/sdk/client/cpu"
 	. "github.com/dimpart/demo-go/sdk/common/ext"
 )

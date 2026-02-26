@@ -1,28 +1,3 @@
-/* license: https://mit-license.org
- * ==============================================================================
- * The MIT License (MIT)
- *
- * Copyright (c) 2021 Albert Moky
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- * ==============================================================================
- */
 package db
 
 import (
@@ -146,16 +121,16 @@ var emptyPrivateKey PrivateKey = &ECCPrivateKey{}
 
 func getIdentityKey(db *Storage, user ID) PrivateKey {
 	// 1. try from memory cache
-	key := db._identityKeyTable[user.String()]
+	key := db.identityKeyTable[user.String()]
 	if key == nil {
 		// 2. try from local storage
 		key = loadIdentityKey(db, user)
 		if key == nil {
 			// place an empty key for cache
-			db._identityKeyTable[user.String()] = emptyPrivateKey
+			db.identityKeyTable[user.String()] = emptyPrivateKey
 		} else {
 			// cache it
-			db._identityKeyTable[user.String()] = key
+			db.identityKeyTable[user.String()] = key
 		}
 	} else if key == emptyPrivateKey {
 		db.error("Private key not found: " + user.String())
@@ -166,18 +141,18 @@ func getIdentityKey(db *Storage, user ID) PrivateKey {
 
 func getCommunicationKeys(db *Storage, user ID) []PrivateKey {
 	// 1. try from memory cache
-	keys := db._communicationKeyTable[user.String()]
+	keys := db.communicationKeyTable[user.String()]
 	if keys == nil {
 		// 2. try from local storage
 		keys = loadCommunicationKeys(db, user)
 		// 3. cache them
-		db._communicationKeyTable[user.String()] = keys
+		db.communicationKeyTable[user.String()] = keys
 	}
 	return keys
 }
 func getDecryptionKeys(db *Storage, user ID) []DecryptKey {
 	// 1. try from memory cache
-	keys := db._decryptionKeyTable[user.String()]
+	keys := db.decryptionKeyTable[user.String()]
 	if len(keys) == 0 {
 		var decKey DecryptKey
 		var ok bool
@@ -197,7 +172,7 @@ func getDecryptionKeys(db *Storage, user ID) []DecryptKey {
 			keys = append(keys, decKey)
 		}
 		// 4. cache them
-		db._decryptionKeyTable[user.String()] = keys
+		db.decryptionKeyTable[user.String()] = keys
 	}
 	return keys
 }
@@ -208,7 +183,7 @@ func cacheIdentityKey(db *Storage, user ID, key PrivateKey) bool {
 		// identity key won't change
 		return false
 	}
-	db._identityKeyTable[user.String()] = key
+	db.identityKeyTable[user.String()] = key
 	return true
 }
 
@@ -223,9 +198,9 @@ func cacheCommunicationKey(db *Storage, user ID, key PrivateKey) bool {
 		keys = keys[:2] // keep only last three records
 	}
 	keys = insertKey(keys, key)
-	db._communicationKeyTable[user.String()] = keys
+	db.communicationKeyTable[user.String()] = keys
 	// reset decryption keys
-	delete(db._decryptionKeyTable, user.String())
+	delete(db.decryptionKeyTable, user.String())
 	return true
 }
 

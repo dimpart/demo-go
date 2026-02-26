@@ -32,6 +32,7 @@ package dkd
 
 import (
 	. "github.com/dimchat/core-go/protocol"
+	. "github.com/dimchat/dkd-go/protocol"
 	. "github.com/dimchat/mkm-go/protocol"
 	. "github.com/dimchat/mkm-go/types"
 	. "github.com/dimpart/demo-go/sdk/common/protocol"
@@ -151,4 +152,16 @@ func NewReportCommand(title string) ReportCommand {
 
 func NewReportCommandWithMap(dict StringKeyMap) Command {
 	return NewBaseReportCommand(dict, "")
+}
+
+/**
+ *  Application Customized Content
+ */
+
+func NewCustomizedContent(app, mod, act string) CustomizedContent {
+	return NewAppCustomizedContent(nil, "", app, mod, act)
+}
+
+func NewCustomizedContentWithMap(dict StringKeyMap) Content {
+	return NewAppCustomizedContent(dict, "", "", "", "")
 }

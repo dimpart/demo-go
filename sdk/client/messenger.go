@@ -1,29 +1,4 @@
-/* license: https://mit-license.org
- * ==============================================================================
- * The MIT License (MIT)
- *
- * Copyright (c) 2021 Albert Moky
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- * ==============================================================================
- */
-package dimp
+package sdk
 
 import (
 	. "github.com/dimchat/mkm-go/protocol"
@@ -32,47 +7,70 @@ import (
 	. "github.com/dimpart/demo-go/sdk/common"
 )
 
+// IClientMessenger defines the interface for client-side message communication
+//
+// Extends ICommonMessenger with client-specific operations: handshake, broadcast, login, and presence reporting
 type IClientMessenger interface {
 	ICommonMessenger
 
+	// GetClientSession retrieves the client-specific session interface
+	//
+	// Returns: IClientSession instance for client session management
 	GetClientSession() IClientSession
 
-	/**
-	 *  Send handshake command to current station
-	 *
-	 * @param sessionKey - respond session key
-	 */
+	// Handshake sends a handshake command to the current network station
+	//
+	// Establishes a secure session with the station using the provided session key
+	//
+	// Parameters:
+	//   - sessionKey - Session key to use for the handshake response (authentication)
 	Handshake(sessionKey string)
 
-	/**
-	 *  Callback for handshake success
-	 */
+	// HandshakeSuccess is the callback invoked when handshake completes successfully
+	//
+	// Triggers post-handshake operations (e.g., session initialization, document broadcast)
 	HandshakeSuccess()
 
-	/**
-	 *  Broadcast meta &amp; visa document to all stations
-	 */
+	// BroadcastDocuments sends Meta and Visa documents to all network stations
+	//
+	// Controls broadcast behavior based on update status:
+	//   - updated=true: Force broadcast (document changed, send immediately)
+	//   - updated=false: Conditional broadcast (only send if needed/fresh)
+	// Parameters:
+	//   - updated - Flag indicating if documents have been updated
 	BroadcastDocuments(updated bool)
 
-	/**
-	 *  Send login command to keep roaming
-	 */
+	// BroadcastLogin sends a login command to maintain roaming state across stations
+	//
+	// Keeps the client's login state active across network stations (roaming support)
+	//
+	// Parameters:
+	//   - sender    - User ID of the login sender (current client user)
+	//   - userAgent - Client user agent string (e.g., "DIM-Client/1.0 (iOS)")
 	BroadcastLogin(sender ID, userAgent string)
 
-	/**
-	 *  Send report command to keep user online
-	 */
+	// ReportOnline sends a presence report command to mark the user as online
+	//
+	// Updates the user's online status across the network
+	//
+	// Parameters:
+	//   - sender - User ID to mark as online
 	ReportOnline(sender ID)
 
-	/**
-	 *  Send report command to let user offline
-	 */
+	// ReportOffline sends a presence report command to mark the user as offline
+	//
+	// Updates the user's offline status across the network
+	//
+	// Parameters:
+	//   - sender - User ID to mark as offline
 	ReportOffline(sender ID)
 }
 
-/**
- *  Client Messenger for Handshake &amp; Broadcast Report
- */
+// ClientMessenger implements the IClientMessenger interface
+//
+// # Wraps CommonMessenger to provide client-specific message communication capabilities
+//
+// Core responsibilities: Handshake management, document broadcasting, and presence reporting
 type ClientMessenger struct {
 	//IClientMessenger
 	*CommonMessenger
